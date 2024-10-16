@@ -6,12 +6,8 @@
 set -eux
 
 case ${1} in
-    loongarch64)
-        musl_version=1.2.5
-        ;;
-    *)
-        musl_version=1.1.24
-        ;;
+    musl_version=1.2.5
+    ;;
 esac
 
 musl="musl-${musl_version}"
