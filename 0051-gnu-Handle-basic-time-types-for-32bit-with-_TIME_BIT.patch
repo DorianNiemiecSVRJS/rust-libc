@@ -1,0 +1,41 @@
+From e9f0ad2ddb56b516e5f455592581f820ceb98a31 Mon Sep 17 00:00:00 2001
+From: Ola x Nilsson <olani@axis.com>
+Date: Tue, 25 Mar 2025 17:09:13 +0100
+Subject: [PATCH 51/80] gnu: Handle basic time types for 32bit with
+ _TIME_BITS=64
+
+Set the basic types correctly for
+gnu_time_bits64 (_TIME_BITS=64 and _FILE_OFFSET_BITS=64).
+
+(backport <https://github.com/rust-lang/libc/pull/4433>)
+(cherry picked from commit 739873b59ceb1ae63229d71823c0b64bdb880482)
+---
+ src/unix/linux_like/linux/gnu/b32/mod.rs | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/src/unix/linux_like/linux/gnu/b32/mod.rs b/src/unix/linux_like/linux/gnu/b32/mod.rs
+index e9a958478..67737d684 100644
+--- a/src/unix/linux_like/linux/gnu/b32/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/mod.rs
+@@ -29,6 +29,18 @@ cfg_if! {
+         pub type fsfilcnt_t = u64;
+         pub type rlim_t = u64;
+         pub type blksize_t = i64;
++    } else if #[cfg(gnu_time_bits64)] {
++        pub type time_t = i64;
++        pub type suseconds_t = i32;
++        type __ino_t = c_ulong;
++        type __ino64_t = u64;
++        pub type ino_t = __ino64_t;
++        pub type off_t = i64;
++        pub type blkcnt_t = i64;
++        pub type fsblkcnt_t = u64;
++        pub type fsfilcnt_t = u64;
++        pub type rlim_t = u64;
++        pub type blksize_t = i32;
+     } else if #[cfg(gnu_file_offset_bits64)] {
+         pub type time_t = i32;
+         pub type suseconds_t = i32;
+-- 
+2.43.0
+

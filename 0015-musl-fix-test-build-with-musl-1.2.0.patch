@@ -1,0 +1,33 @@
+From b3f1acf5952b27f9e773761c84e31188998f7471 Mon Sep 17 00:00:00 2001
+From: Reagan Bohan <xbjfk.github@gmail.com>
+Date: Thu, 1 May 2025 11:20:37 +0000
+Subject: [PATCH 15/80] musl: fix test build with musl 1.2.0+
+
+Since musl 1.2.0, the utmpx.ut_session type changed from long to int
+(with padding). For now, skip the test for this field.
+Fixes: 3305
+
+(backport <https://github.com/rust-lang/libc/pull/4438>)
+(cherry picked from commit aa08592255c39ee99d32fffae78007a842293c0d)
+---
+ libc-test/build.rs | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/libc-test/build.rs b/libc-test/build.rs
+index 84d707e16..ebc2f97a0 100644
+--- a/libc-test/build.rs
++++ b/libc-test/build.rs
+@@ -4880,7 +4880,9 @@ fn test_linux(target: &str) {
+         (struct_ == "statvfs" && field == "__f_spare") ||
+         (struct_ == "statvfs64" && field == "__f_spare") ||
+         // the `xsk_tx_metadata_union` field is an anonymous union
+-        (struct_ == "xsk_tx_metadata" && field == "xsk_tx_metadata_union")
++        (struct_ == "xsk_tx_metadata" && field == "xsk_tx_metadata_union") ||
++        // FIXME(musl): After musl 1.2.0, the type becomes `int` instead of `long`.
++        (struct_ == "utmpx" && field == "ut_session")
+     });
+ 
+     cfg.skip_roundtrip(move |s| match s {
+-- 
+2.43.0
+

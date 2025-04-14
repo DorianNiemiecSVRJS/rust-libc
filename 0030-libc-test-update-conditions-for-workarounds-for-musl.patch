@@ -1,0 +1,67 @@
+From a28ee2b2d93927a57dd9860db189b7cad255ce15 Mon Sep 17 00:00:00 2001
+From: Reagan Bohan <xbjfk.github@gmail.com>
+Date: Sat, 3 May 2025 09:18:40 +0000
+Subject: [PATCH 30/80] libc-test: update conditions for workarounds for musl
+ <1.2.3
+
+This commit gates various workarounds of older musl versions behind the
+RUST_LIBC_UNSTABLE_MUSL_V1_2_3 variable.
+
+(backport <https://github.com/rust-lang/libc/pull/4443>)
+(cherry picked from commit 85a7c8536d6d6a56257eb2755b28a1dc41c1cd0f)
+---
+ libc-test/build.rs | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/libc-test/build.rs b/libc-test/build.rs
+index 1ac7baf8c..cf432fd19 100644
+--- a/libc-test/build.rs
++++ b/libc-test/build.rs
+@@ -3730,6 +3730,9 @@ fn test_linux(target: &str) {
+     let wasm32 = target.contains("wasm32");
+     let uclibc = target.contains("uclibc");
+ 
++    let musl_v1_2_3 = env::var("RUST_LIBC_UNSTABLE_MUSL_V1_2_3").is_ok();
++    let old_musl = musl && !musl_v1_2_3;
++
+     let mut cfg = ctest_cfg();
+     cfg.define("_GNU_SOURCE", None);
+     // This macro re-defines fscanf,scanf,sscanf to link to the symbols that are
+@@ -4300,9 +4303,9 @@ fn test_linux(target: &str) {
+             if name == "PR_GET_MDWE" || name == "PR_MDWE_NO_INHERIT" || name == "PR_MDWE_REFUSE_EXEC_GAIN" || name == "PR_SET_MDWE" {
+                 return true;
+             }
+-            // FIXME(musl): Requires musl >= 1.2
+-            if name == "SO_PREFER_BUSY_POLL"
+-                || name == "SO_BUSY_POLL_BUDGET"
++            // Requires musl >= 1.2
++            if old_musl && (name == "SO_PREFER_BUSY_POLL"
++                || name == "SO_BUSY_POLL_BUDGET")
+             {
+                 return true;
+             }
+@@ -4734,18 +4737,18 @@ fn test_linux(target: &str) {
+             "getnameinfo" if uclibc => true,
+ 
+             // FIXME(musl): This needs musl 1.2.2 or later.
+-            "gettid" if musl => true,
++            "gettid" if old_musl => true,
+ 
+             // Needs glibc 2.33 or later.
+             "mallinfo2" => true,
+ 
+-            "reallocarray" if musl => true,
++            "reallocarray" if old_musl => true,
+ 
+             // Not defined in uclibc as of 1.0.34
+             "gettid" if uclibc => true,
+ 
+             // Needs musl 1.2.3 or later.
+-            "pthread_getname_np" if musl => true,
++            "pthread_getname_np" if old_musl => true,
+ 
+             // pthread_sigqueue uses sigval, which was initially declared
+             // as a struct but should be defined as a union. However due
+-- 
+2.43.0
+

@@ -1,0 +1,85 @@
+From 28779d2c468849174bf24bbfde1cae28813b21f6 Mon Sep 17 00:00:00 2001
+From: Ashwin Naren <arihant2math@gmail.com>
+Date: Wed, 23 Apr 2025 10:18:10 -0700
+Subject: [PATCH 14/80] add more windows time.h functions
+
+(backport <https://github.com/rust-lang/libc/pull/4427>)
+(cherry picked from commit 35a32a7cee020fb577e0ccaf9eecbc787dd261e0)
+---
+ libc-test/semver/windows.txt |  8 ++++++++
+ src/windows/mod.rs           | 13 +++++++++++++
+ 2 files changed, 21 insertions(+)
+
+diff --git a/libc-test/semver/windows.txt b/libc-test/semver/windows.txt
+index db55da5f4..281a13bb7 100644
+--- a/libc-test/semver/windows.txt
++++ b/libc-test/semver/windows.txt
+@@ -174,12 +174,15 @@ c_void
+ calloc
+ chdir
+ chmod
++clock
+ clock_t
+ close
+ commit
+ connect
+ creat
++ctime
+ dev_t
++difftime
+ dup
+ dup2
+ errno_t
+@@ -214,7 +217,11 @@ fsetpos
+ fstat
+ ftell
+ fwrite
++get_daylight
++get_dstbias
+ get_osfhandle
++get_timezone
++get_tzname
+ getchar
+ getcwd
+ getenv
+@@ -326,6 +333,7 @@ tm
+ tmpfile
+ tolower
+ toupper
++tzset
+ uint16_t
+ uint32_t
+ uint64_t
+diff --git a/src/windows/mod.rs b/src/windows/mod.rs
+index 06cab0e50..8490b709b 100644
+--- a/src/windows/mod.rs
++++ b/src/windows/mod.rs
+@@ -382,12 +382,25 @@ extern "C" {
+     pub fn signal(signum: c_int, handler: sighandler_t) -> sighandler_t;
+     pub fn raise(signum: c_int) -> c_int;
+ 
++    pub fn clock() -> clock_t;
++    pub fn ctime(sourceTime: *const time_t) -> *mut c_char;
++    pub fn difftime(timeEnd: time_t, timeStart: time_t) -> c_double;
+     #[link_name = "_gmtime64_s"]
+     pub fn gmtime_s(destTime: *mut tm, srcTime: *const time_t) -> c_int;
++    #[link_name = "_get_daylight"]
++    pub fn get_daylight(hours: *mut c_int) -> errno_t;
++    #[link_name = "_get_dstbias"]
++    pub fn get_dstbias(seconds: *mut c_long) -> errno_t;
++    #[link_name = "_get_timezone"]
++    pub fn get_timezone(seconds: *mut c_long) -> errno_t;
++    #[link_name = "_get_tzname"]
++    pub fn get_tzname(p_return_value: *mut size_t, time_zone_name: *mut c_char, size_in_bytes: size_t, index: c_int) -> errno_t;
+     #[link_name = "_localtime64_s"]
+     pub fn localtime_s(tmDest: *mut tm, sourceTime: *const time_t) -> crate::errno_t;
+     #[link_name = "_time64"]
+     pub fn time(destTime: *mut time_t) -> time_t;
++    #[link_name = "_tzset"]
++    pub fn tzset();
+     #[link_name = "_chmod"]
+     pub fn chmod(path: *const c_char, mode: c_int) -> c_int;
+     #[link_name = "_wchmod"]
+-- 
+2.43.0
+

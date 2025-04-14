@@ -1,0 +1,728 @@
+From a598506f0592445b5e98055e3d6c48dd2bb7fa6f Mon Sep 17 00:00:00 2001
+From: Yuri Astrakhan <YuriAstrakhan@gmail.com>
+Date: Mon, 14 Apr 2025 21:33:10 -0400
+Subject: [PATCH 25/80] chore: apply some clippy lints
+
+(backport <https://github.com/rust-lang/libc/pull/4415>)
+[ drop changes around the FreeBSD version in build.rs since the logic
+  isn't the same - Trevor ]
+(cherry picked from commit a283b9e66d4a8e9371b0aa69d8534010a1c7d9e7)
+---
+ Cargo.toml                                    | 28 +++++++++------
+ build.rs                                      | 36 ++++++++++---------
+ src/fuchsia/mod.rs                            |  6 ++--
+ src/unix/aix/mod.rs                           |  4 +--
+ src/unix/bsd/apple/mod.rs                     |  6 ++--
+ src/unix/bsd/freebsdlike/dragonfly/mod.rs     |  2 +-
+ src/unix/bsd/freebsdlike/freebsd/mod.rs       |  6 ++--
+ src/unix/bsd/mod.rs                           |  4 +--
+ src/unix/bsd/netbsdlike/netbsd/mod.rs         |  4 +--
+ src/unix/bsd/netbsdlike/openbsd/mod.rs        |  2 +-
+ src/unix/haiku/mod.rs                         |  4 +--
+ src/unix/hurd/mod.rs                          |  6 ++--
+ src/unix/linux_like/android/mod.rs            |  2 +-
+ src/unix/linux_like/emscripten/mod.rs         |  4 +--
+ src/unix/linux_like/linux/gnu/b64/mod.rs      |  2 +-
+ .../linux_like/linux/gnu/b64/riscv64/mod.rs   |  1 +
+ src/unix/linux_like/linux/gnu/mod.rs          |  6 ++--
+ src/unix/linux_like/linux/mod.rs              | 32 +++++++----------
+ src/unix/linux_like/mod.rs                    |  8 ++---
+ src/unix/nto/mod.rs                           |  4 +--
+ src/unix/solarish/compat.rs                   |  6 ++--
+ src/unix/solarish/mod.rs                      |  4 +--
+ src/vxworks/mod.rs                            |  4 +--
+ 23 files changed, 90 insertions(+), 91 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 88d748dc5..0f6a6a7e5 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -159,15 +159,21 @@ members = [
+ unused_qualifications = "allow"
+ 
+ [lints.clippy]
+-missing_safety_doc = "allow"
++# Enable pedantic lints - use this manually once in a while, but don't enable by default
++# pedantic = { level = "warn", priority = -1 }
+ 
+-# FIXME(clippy): all these are default lints and should probably be fixed
+-identity_op = "allow"
+-if_same_then_else = "allow"
+-non_minimal_cfg = "allow"
+-precedence = "allow"
+-redundant_field_names = "allow"
+-redundant_static_lifetimes = "allow"
+-unnecessary_cast = "allow"
+-unused_unit = "allow"
+-zero_ptr = "allow"
++# We are okay with the current state of these lints
++explicit_iter_loop = "warn"
++identity_op = "allow"  # some expressions like `0 | x` are clearer for bit ops
++manual_assert = "warn"
++map_unwrap_or = "warn"
++missing_safety_doc = "allow"  # safety? in libc? seriously?
++non_minimal_cfg = "allow"  # for some reason cfg_if! sometimes trigger this
++ptr_as_ptr = "warn"
++unnecessary_semicolon = "warn"
++
++# FIXME(clippy): these should be fixed if possible
++expl_impl_clone_on_copy = "allow"
++uninlined_format_args = "allow"
++unnecessary_cast = "allow"  # some casts like `as usize` are only needed for some targets
++used_underscore_binding = "allow"
+diff --git a/build.rs b/build.rs
+index 2fc84aa6b..bcb9495e4 100644
+--- a/build.rs
++++ b/build.rs
+@@ -4,7 +4,7 @@ use std::{env, str};
+ // List of cfgs this build script is allowed to set. The list is needed to support check-cfg, as we
+ // need to know all the possible cfgs that this script will set. If you need to set another cfg
+ // make sure to add it to this list as well.
+-const ALLOWED_CFGS: &'static [&'static str] = &[
++const ALLOWED_CFGS: &[&str] = &[
+     "emscripten_old_stat_abi",
+     "espidf_time32",
+     "freebsd10",
+@@ -25,7 +25,7 @@ const ALLOWED_CFGS: &'static [&'static str] = &[
+ ];
+ 
+ // Extra values to allow for check-cfg.
+-const CHECK_CFG_EXTRA: &'static [(&'static str, &'static [&'static str])] = &[
++const CHECK_CFG_EXTRA: &[(&str, &[&str])] = &[
+     (
+         "target_os",
+         &[
+@@ -169,12 +169,11 @@ fn rustc_version_cmd(is_clippy_driver: bool) -> Output {
+ 
+     let output = cmd.output().expect("Failed to get rustc version");
+ 
+-    if !output.status.success() {
+-        panic!(
+-            "failed to run rustc: {}",
+-            String::from_utf8_lossy(output.stderr.as_slice())
+-        );
+-    }
++    assert!(
++        output.status.success(),
++        "failed to run rustc: {}",
++        String::from_utf8_lossy(output.stderr.as_slice())
++    );
+ 
+     output
+ }
+@@ -201,9 +200,11 @@ fn rustc_minor_nightly() -> (u32, bool) {
+ 
+     let mut pieces = version.split('.');
+ 
+-    if pieces.next() != Some("rustc 1") {
+-        panic!("Failed to get rustc version");
+-    }
++    assert_eq!(
++        pieces.next(),
++        Some("rustc 1"),
++        "Failed to get rustc version"
++    );
+ 
+     let minor = pieces.next();
+ 
+@@ -213,9 +214,9 @@ fn rustc_minor_nightly() -> (u32, bool) {
+     // since a nightly build should either come from CI
+     // or a git checkout
+     let nightly_raw = otry!(pieces.next()).split('-').nth(1);
+-    let nightly = nightly_raw
+-        .map(|raw| raw.starts_with("dev") || raw.starts_with("nightly"))
+-        .unwrap_or(false);
++    let nightly = nightly_raw.map_or(false, |raw| {
++        raw.starts_with("dev") || raw.starts_with("nightly")
++    });
+     let minor = otry!(otry!(minor).parse().ok());
+ 
+     (minor, nightly)
+@@ -266,8 +267,9 @@ fn emcc_version_code() -> Option<u64> {
+ }
+ 
+ fn set_cfg(cfg: &str) {
+-    if !ALLOWED_CFGS.contains(&cfg) {
+-        panic!("trying to set cfg {cfg}, but it is not in ALLOWED_CFGS");
+-    }
++    assert!(
++        ALLOWED_CFGS.contains(&cfg),
++        "trying to set cfg {cfg}, but it is not in ALLOWED_CFGS",
++    );
+     println!("cargo:rustc-cfg={cfg}");
+ }
+diff --git a/src/fuchsia/mod.rs b/src/fuchsia/mod.rs
+index f065eaa3a..c09708f71 100644
+--- a/src/fuchsia/mod.rs
++++ b/src/fuchsia/mod.rs
+@@ -3429,9 +3429,9 @@ f! {
+ 
+     pub fn CMSG_NXTHDR(mhdr: *const msghdr, cmsg: *const cmsghdr) -> *mut cmsghdr {
+         if ((*cmsg).cmsg_len as size_t) < mem::size_of::<cmsghdr>() {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         } else if __CMSG_NEXT(cmsg).add(mem::size_of::<cmsghdr>()) >= __MHDR_END(mhdr) {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         } else {
+             __CMSG_NEXT(cmsg).cast()
+         }
+@@ -3441,7 +3441,7 @@ f! {
+         if (*mhdr).msg_controllen as size_t >= mem::size_of::<cmsghdr>() {
+             (*mhdr).msg_control.cast()
+         } else {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         }
+     }
+ 
+diff --git a/src/unix/aix/mod.rs b/src/unix/aix/mod.rs
+index 8cca9bb3c..a8bfca7d2 100644
+--- a/src/unix/aix/mod.rs
++++ b/src/unix/aix/mod.rs
+@@ -2442,7 +2442,7 @@ f! {
+         if (*mhdr).msg_controllen as usize >= mem::size_of::<cmsghdr>() {
+             (*mhdr).msg_control as *mut cmsghdr
+         } else {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         }
+     }
+ 
+@@ -2453,7 +2453,7 @@ f! {
+             if (cmsg as usize + (*cmsg).cmsg_len as usize + mem::size_of::<cmsghdr>())
+                 > ((*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize)
+             {
+-                0 as *mut cmsghdr
++                core::ptr::null_mut::<cmsghdr>()
+             } else {
+                 // AIX does not have any alignment/padding for ancillary data, so we don't need _CMSG_ALIGN here.
+                 (cmsg as usize + (*cmsg).cmsg_len as usize) as *mut cmsghdr
+diff --git a/src/unix/bsd/apple/mod.rs b/src/unix/bsd/apple/mod.rs
+index 9c76ed7c0..ebc841a99 100644
+--- a/src/unix/bsd/apple/mod.rs
++++ b/src/unix/bsd/apple/mod.rs
+@@ -1691,7 +1691,7 @@ impl siginfo_t {
+             si_value: crate::sigval,
+         }
+ 
+-        (*(self as *const siginfo_t as *const siginfo_timer)).si_value
++        (*(self as *const siginfo_t).cast::<siginfo_timer>()).si_value
+     }
+ 
+     pub unsafe fn si_pid(&self) -> crate::pid_t {
+@@ -5635,7 +5635,7 @@ pub const VMADDR_PORT_ANY: c_uint = 0xFFFFFFFF;
+ 
+ const fn __DARWIN_ALIGN32(p: usize) -> usize {
+     const __DARWIN_ALIGNBYTES32: usize = mem::size_of::<u32>() - 1;
+-    p + __DARWIN_ALIGNBYTES32 & !__DARWIN_ALIGNBYTES32
++    (p + __DARWIN_ALIGNBYTES32) & !__DARWIN_ALIGNBYTES32
+ }
+ 
+ pub const THREAD_EXTENDED_POLICY_COUNT: mach_msg_type_number_t =
+@@ -5710,7 +5710,7 @@ f! {
+     pub fn CMSG_NXTHDR(mhdr: *const crate::msghdr, cmsg: *const cmsghdr) -> *mut cmsghdr {
+         if cmsg.is_null() {
+             return crate::CMSG_FIRSTHDR(mhdr);
+-        };
++        }
+         let cmsg_len = (*cmsg).cmsg_len as usize;
+         let next = cmsg as usize + __DARWIN_ALIGN32(cmsg_len);
+         let max = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
+diff --git a/src/unix/bsd/freebsdlike/dragonfly/mod.rs b/src/unix/bsd/freebsdlike/dragonfly/mod.rs
+index 5dbe69e56..5534c1390 100644
+--- a/src/unix/bsd/freebsdlike/dragonfly/mod.rs
++++ b/src/unix/bsd/freebsdlike/dragonfly/mod.rs
+@@ -1560,7 +1560,7 @@ f! {
+         if next <= max {
+             (cmsg as usize + _CMSG_ALIGN((*cmsg).cmsg_len as usize)) as *mut cmsghdr
+         } else {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         }
+     }
+ 
+diff --git a/src/unix/bsd/freebsdlike/freebsd/mod.rs b/src/unix/bsd/freebsdlike/freebsd/mod.rs
+index 11830db22..7d6b876d6 100644
+--- a/src/unix/bsd/freebsdlike/freebsd/mod.rs
++++ b/src/unix/bsd/freebsdlike/freebsd/mod.rs
+@@ -4930,7 +4930,7 @@ const_fn! {
+ 
+ f! {
+     pub fn CMSG_DATA(cmsg: *const cmsghdr) -> *mut c_uchar {
+-        (cmsg as *mut c_uchar).offset(_ALIGN(mem::size_of::<cmsghdr>()) as isize)
++        (cmsg as *mut c_uchar).add(_ALIGN(mem::size_of::<cmsghdr>()))
+     }
+ 
+     pub {const} fn CMSG_LEN(length: c_uint) -> c_uint {
+@@ -4945,7 +4945,7 @@ f! {
+             cmsg as usize + _ALIGN((*cmsg).cmsg_len as usize) + _ALIGN(mem::size_of::<cmsghdr>());
+         let max = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
+         if next > max {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         } else {
+             (cmsg as usize + _ALIGN((*cmsg).cmsg_len as usize)) as *mut cmsghdr
+         }
+@@ -4992,14 +4992,12 @@ f! {
+         let bitset_bits = 8 * mem::size_of::<c_long>();
+         let (idx, offset) = (cpu / bitset_bits, cpu % bitset_bits);
+         cpuset.__bits[idx] |= 1 << offset;
+-        ()
+     }
+ 
+     pub fn CPU_CLR(cpu: usize, cpuset: &mut cpuset_t) -> () {
+         let bitset_bits = 8 * mem::size_of::<c_long>();
+         let (idx, offset) = (cpu / bitset_bits, cpu % bitset_bits);
+         cpuset.__bits[idx] &= !(1 << offset);
+-        ()
+     }
+ 
+     pub fn CPU_ISSET(cpu: usize, cpuset: &cpuset_t) -> bool {
+diff --git a/src/unix/bsd/mod.rs b/src/unix/bsd/mod.rs
+index 674fdc088..1f84950fa 100644
+--- a/src/unix/bsd/mod.rs
++++ b/src/unix/bsd/mod.rs
+@@ -596,7 +596,7 @@ pub const RTAX_BRD: c_int = 7;
+ f! {
+     pub fn CMSG_FIRSTHDR(mhdr: *const crate::msghdr) -> *mut cmsghdr {
+         if (*mhdr).msg_controllen as usize >= mem::size_of::<cmsghdr>() {
+-            (*mhdr).msg_control as *mut cmsghdr
++            (*mhdr).msg_control.cast::<cmsghdr>()
+         } else {
+             core::ptr::null_mut()
+         }
+@@ -623,7 +623,7 @@ f! {
+     }
+ 
+     pub fn FD_ZERO(set: *mut fd_set) -> () {
+-        for slot in (*set).fds_bits.iter_mut() {
++        for slot in &mut (*set).fds_bits {
+             *slot = 0;
+         }
+     }
+diff --git a/src/unix/bsd/netbsdlike/netbsd/mod.rs b/src/unix/bsd/netbsdlike/netbsd/mod.rs
+index 9f44907a9..8633ee3dd 100644
+--- a/src/unix/bsd/netbsdlike/netbsd/mod.rs
++++ b/src/unix/bsd/netbsdlike/netbsd/mod.rs
+@@ -2423,7 +2423,7 @@ const_fn! {
+ 
+ f! {
+     pub fn CMSG_DATA(cmsg: *const cmsghdr) -> *mut c_uchar {
+-        (cmsg as *mut c_uchar).offset(_ALIGN(mem::size_of::<cmsghdr>()) as isize)
++        (cmsg as *mut c_uchar).add(_ALIGN(mem::size_of::<cmsghdr>()))
+     }
+ 
+     pub {const} fn CMSG_LEN(length: c_uint) -> c_uint {
+@@ -2438,7 +2438,7 @@ f! {
+             cmsg as usize + _ALIGN((*cmsg).cmsg_len as usize) + _ALIGN(mem::size_of::<cmsghdr>());
+         let max = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
+         if next > max {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         } else {
+             (cmsg as usize + _ALIGN((*cmsg).cmsg_len as usize)) as *mut cmsghdr
+         }
+diff --git a/src/unix/bsd/netbsdlike/openbsd/mod.rs b/src/unix/bsd/netbsdlike/openbsd/mod.rs
+index ff3a99fcc..bd18311f5 100644
+--- a/src/unix/bsd/netbsdlike/openbsd/mod.rs
++++ b/src/unix/bsd/netbsdlike/openbsd/mod.rs
+@@ -1957,7 +1957,7 @@ f! {
+             cmsg as usize + _ALIGN((*cmsg).cmsg_len as usize) + _ALIGN(mem::size_of::<cmsghdr>());
+         let max = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
+         if next > max {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         } else {
+             (cmsg as usize + _ALIGN((*cmsg).cmsg_len as usize)) as *mut cmsghdr
+         }
+diff --git a/src/unix/haiku/mod.rs b/src/unix/haiku/mod.rs
+index ef48fa6f9..a47aac2a4 100644
+--- a/src/unix/haiku/mod.rs
++++ b/src/unix/haiku/mod.rs
+@@ -1572,7 +1572,7 @@ f! {
+         if (*mhdr).msg_controllen as usize >= mem::size_of::<cmsghdr>() {
+             (*mhdr).msg_control as *mut cmsghdr
+         } else {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         }
+     }
+ 
+@@ -1597,7 +1597,7 @@ f! {
+             + CMSG_ALIGN(mem::size_of::<cmsghdr>());
+         let max = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
+         if next > max {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         } else {
+             (cmsg as usize + CMSG_ALIGN((*cmsg).cmsg_len as usize)) as *mut cmsghdr
+         }
+diff --git a/src/unix/hurd/mod.rs b/src/unix/hurd/mod.rs
+index 961710b5a..f32975bac 100644
+--- a/src/unix/hurd/mod.rs
++++ b/src/unix/hurd/mod.rs
+@@ -3444,7 +3444,7 @@ f! {
+         if (*mhdr).msg_controllen as usize >= mem::size_of::<cmsghdr>() {
+             (*mhdr).msg_control as *mut cmsghdr
+         } else {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         }
+     }
+ 
+@@ -3462,14 +3462,14 @@ f! {
+ 
+     pub fn CMSG_NXTHDR(mhdr: *const msghdr, cmsg: *const cmsghdr) -> *mut cmsghdr {
+         if ((*cmsg).cmsg_len as usize) < mem::size_of::<cmsghdr>() {
+-            return 0 as *mut cmsghdr;
++            return core::ptr::null_mut::<cmsghdr>();
+         };
+         let next = (cmsg as usize + CMSG_ALIGN((*cmsg).cmsg_len as usize)) as *mut cmsghdr;
+         let max = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
+         if (next.offset(1)) as usize > max
+             || next as usize + CMSG_ALIGN((*next).cmsg_len as usize) > max
+         {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         } else {
+             next as *mut cmsghdr
+         }
+diff --git a/src/unix/linux_like/android/mod.rs b/src/unix/linux_like/android/mod.rs
+index 3d24d5d8f..2aa47cda0 100644
+--- a/src/unix/linux_like/android/mod.rs
++++ b/src/unix/linux_like/android/mod.rs
+@@ -3653,7 +3653,7 @@ f! {
+         let next = (cmsg as usize + super::CMSG_ALIGN((*cmsg).cmsg_len as usize)) as *mut cmsghdr;
+         let max = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
+         if (next.offset(1)) as usize > max {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         } else {
+             next as *mut cmsghdr
+         }
+diff --git a/src/unix/linux_like/emscripten/mod.rs b/src/unix/linux_like/emscripten/mod.rs
+index 462a944b1..46d0d0f00 100644
+--- a/src/unix/linux_like/emscripten/mod.rs
++++ b/src/unix/linux_like/emscripten/mod.rs
+@@ -1412,12 +1412,12 @@ pub const SOMAXCONN: c_int = 128;
+ f! {
+     pub fn CMSG_NXTHDR(mhdr: *const msghdr, cmsg: *const cmsghdr) -> *mut cmsghdr {
+         if ((*cmsg).cmsg_len as usize) < mem::size_of::<cmsghdr>() {
+-            return 0 as *mut cmsghdr;
++            return core::ptr::null_mut::<cmsghdr>();
+         };
+         let next = (cmsg as usize + super::CMSG_ALIGN((*cmsg).cmsg_len as usize)) as *mut cmsghdr;
+         let max = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
+         if (next.offset(1)) as usize > max {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         } else {
+             next as *mut cmsghdr
+         }
+diff --git a/src/unix/linux_like/linux/gnu/b64/mod.rs b/src/unix/linux_like/linux/gnu/b64/mod.rs
+index 9d7608f67..5927e6c99 100644
+--- a/src/unix/linux_like/linux/gnu/b64/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b64/mod.rs
+@@ -119,7 +119,7 @@ cfg_if! {
+     } else if #[cfg(any(target_arch = "s390x"))] {
+         mod s390x;
+         pub use self::s390x::*;
+-    } else if #[cfg(any(target_arch = "x86_64"))] {
++    } else if #[cfg(target_arch = "x86_64")] {
+         mod x86_64;
+         pub use self::x86_64::*;
+     } else if #[cfg(any(target_arch = "riscv64"))] {
+diff --git a/src/unix/linux_like/linux/gnu/b64/riscv64/mod.rs b/src/unix/linux_like/linux/gnu/b64/riscv64/mod.rs
+index 578057ce5..d689bb14c 100644
+--- a/src/unix/linux_like/linux/gnu/b64/riscv64/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b64/riscv64/mod.rs
+@@ -601,6 +601,7 @@ pub const REG_NARGS: usize = 8;
+ 
+ pub const COMPAT_HWCAP_ISA_I: c_ulong = 1 << (b'I' - b'A');
+ pub const COMPAT_HWCAP_ISA_M: c_ulong = 1 << (b'M' - b'A');
++#[allow(clippy::eq_op)]
+ pub const COMPAT_HWCAP_ISA_A: c_ulong = 1 << (b'A' - b'A');
+ pub const COMPAT_HWCAP_ISA_F: c_ulong = 1 << (b'F' - b'A');
+ pub const COMPAT_HWCAP_ISA_D: c_ulong = 1 << (b'D' - b'A');
+diff --git a/src/unix/linux_like/linux/gnu/mod.rs b/src/unix/linux_like/linux/gnu/mod.rs
+index 84d7c2474..5ba13dd6f 100644
+--- a/src/unix/linux_like/linux/gnu/mod.rs
++++ b/src/unix/linux_like/linux/gnu/mod.rs
+@@ -447,7 +447,7 @@ impl siginfo_t {
+             _si_code: c_int,
+             si_addr: *mut c_void,
+         }
+-        (*(self as *const siginfo_t as *const siginfo_sigfault)).si_addr
++        (*(self as *const siginfo_t).cast::<siginfo_sigfault>()).si_addr
+     }
+ 
+     pub unsafe fn si_value(&self) -> crate::sigval {
+@@ -460,7 +460,7 @@ impl siginfo_t {
+             _si_overrun: c_int,
+             si_sigval: crate::sigval,
+         }
+-        (*(self as *const siginfo_t as *const siginfo_timer)).si_sigval
++        (*(self as *const siginfo_t).cast::<siginfo_timer>()).si_sigval
+     }
+ }
+ 
+@@ -498,7 +498,7 @@ struct siginfo_f {
+ 
+ impl siginfo_t {
+     unsafe fn sifields(&self) -> &sifields {
+-        &(*(self as *const siginfo_t as *const siginfo_f)).sifields
++        &(*(self as *const siginfo_t).cast::<siginfo_f>()).sifields
+     }
+ 
+     pub unsafe fn si_pid(&self) -> crate::pid_t {
+diff --git a/src/unix/linux_like/linux/mod.rs b/src/unix/linux_like/linux/mod.rs
+index c0989d2d7..2bfe8f7be 100644
+--- a/src/unix/linux_like/linux/mod.rs
++++ b/src/unix/linux_like/linux/mod.rs
+@@ -6080,16 +6080,16 @@ f! {
+ 
+     pub fn CMSG_NXTHDR(mhdr: *const msghdr, cmsg: *const cmsghdr) -> *mut cmsghdr {
+         if ((*cmsg).cmsg_len as usize) < size_of::<cmsghdr>() {
+-            return 0 as *mut cmsghdr;
+-        };
++            return core::ptr::null_mut::<cmsghdr>();
++        }
+         let next = (cmsg as usize + super::CMSG_ALIGN((*cmsg).cmsg_len as usize)) as *mut cmsghdr;
+         let max = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
+         if (next.wrapping_offset(1)) as usize > max
+             || next as usize + super::CMSG_ALIGN((*next).cmsg_len as usize) > max
+         {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         } else {
+-            next as *mut cmsghdr
++            next
+         }
+     }
+ 
+@@ -6100,7 +6100,7 @@ f! {
+     }
+ 
+     pub fn CPU_ZERO(cpuset: &mut cpu_set_t) -> () {
+-        for slot in cpuset.bits.iter_mut() {
++        for slot in &mut cpuset.bits {
+             *slot = 0;
+         }
+     }
+@@ -6109,14 +6109,12 @@ f! {
+         let size_in_bits = 8 * mem::size_of_val(&cpuset.bits[0]); // 32, 64 etc
+         let (idx, offset) = (cpu / size_in_bits, cpu % size_in_bits);
+         cpuset.bits[idx] |= 1 << offset;
+-        ()
+     }
+ 
+     pub fn CPU_CLR(cpu: usize, cpuset: &mut cpu_set_t) -> () {
+         let size_in_bits = 8 * mem::size_of_val(&cpuset.bits[0]); // 32, 64 etc
+         let (idx, offset) = (cpu / size_in_bits, cpu % size_in_bits);
+         cpuset.bits[idx] &= !(1 << offset);
+-        ()
+     }
+ 
+     pub fn CPU_ISSET(cpu: usize, cpuset: &cpu_set_t) -> bool {
+@@ -6128,7 +6126,7 @@ f! {
+     pub fn CPU_COUNT_S(size: usize, cpuset: &cpu_set_t) -> c_int {
+         let mut s: u32 = 0;
+         let size_of_mask = mem::size_of_val(&cpuset.bits[0]);
+-        for i in cpuset.bits[..(size / size_of_mask)].iter() {
++        for i in &cpuset.bits[..(size / size_of_mask)] {
+             s += i.count_ones();
+         }
+         s as c_int
+@@ -6143,7 +6141,7 @@ f! {
+     }
+ 
+     pub fn SCTP_PR_INDEX(policy: c_int) -> c_int {
+-        policy >> 4 - 1
++        policy >> (4 - 1)
+     }
+ 
+     pub fn SCTP_PR_POLICY(policy: c_int) -> c_int {
+@@ -6153,7 +6151,6 @@ f! {
+     pub fn SCTP_PR_SET_POLICY(flags: &mut c_int, policy: c_int) -> () {
+         *flags &= !SCTP_PR_SCTP_MASK;
+         *flags |= policy;
+-        ()
+     }
+ 
+     pub fn IPTOS_TOS(tos: u8) -> u8 {
+@@ -6214,20 +6211,15 @@ f! {
+ 
+     pub fn BPF_STMT(code: __u16, k: __u32) -> sock_filter {
+         sock_filter {
+-            code: code,
++            code,
+             jt: 0,
+             jf: 0,
+-            k: k,
++            k,
+         }
+     }
+ 
+     pub fn BPF_JUMP(code: __u16, k: __u32, jt: __u8, jf: __u8) -> sock_filter {
+-        sock_filter {
+-            code: code,
+-            jt: jt,
+-            jf: jf,
+-            k: k,
+-        }
++        sock_filter { code, jt, jf, k }
+     }
+ 
+     pub fn ELF32_R_SYM(val: Elf32_Word) -> Elf32_Word {
+@@ -6239,7 +6231,7 @@ f! {
+     }
+ 
+     pub fn ELF32_R_INFO(sym: Elf32_Word, t: Elf32_Word) -> Elf32_Word {
+-        sym << 8 + t & 0xff
++        sym << (8 + t) & 0xff
+     }
+ 
+     pub fn ELF64_R_SYM(val: Elf64_Xword) -> Elf64_Xword {
+@@ -6251,7 +6243,7 @@ f! {
+     }
+ 
+     pub fn ELF64_R_INFO(sym: Elf64_Xword, t: Elf64_Xword) -> Elf64_Xword {
+-        sym << 32 + t
++        sym << (32 + t)
+     }
+ }
+ 
+diff --git a/src/unix/linux_like/mod.rs b/src/unix/linux_like/mod.rs
+index 9c7766a14..c73094752 100644
+--- a/src/unix/linux_like/mod.rs
++++ b/src/unix/linux_like/mod.rs
+@@ -1700,16 +1700,16 @@ cfg_if! {
+ 
+ const_fn! {
+     {const} fn CMSG_ALIGN(len: usize) -> usize {
+-        len + mem::size_of::<usize>() - 1 & !(mem::size_of::<usize>() - 1)
++        (len + mem::size_of::<usize>() - 1) & !(mem::size_of::<usize>() - 1)
+     }
+ }
+ 
+ f! {
+     pub fn CMSG_FIRSTHDR(mhdr: *const msghdr) -> *mut cmsghdr {
+         if (*mhdr).msg_controllen as usize >= mem::size_of::<cmsghdr>() {
+-            (*mhdr).msg_control as *mut cmsghdr
++            (*mhdr).msg_control.cast::<cmsghdr>()
+         } else {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         }
+     }
+ 
+@@ -1746,7 +1746,7 @@ f! {
+     }
+ 
+     pub fn FD_ZERO(set: *mut fd_set) -> () {
+-        for slot in (*set).fds_bits.iter_mut() {
++        for slot in &mut (*set).fds_bits {
+             *slot = 0;
+         }
+     }
+diff --git a/src/unix/nto/mod.rs b/src/unix/nto/mod.rs
+index 631972b14..209fd3b69 100644
+--- a/src/unix/nto/mod.rs
++++ b/src/unix/nto/mod.rs
+@@ -2802,7 +2802,7 @@ f! {
+         if (*mhdr).msg_controllen as usize >= mem::size_of::<cmsghdr>() {
+             (*mhdr).msg_control as *mut cmsghdr
+         } else {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         }
+     }
+ 
+@@ -2810,7 +2810,7 @@ f! {
+         let msg = _CMSG_ALIGN((*cmsg).cmsg_len as usize);
+         let next = cmsg as usize + msg + _CMSG_ALIGN(mem::size_of::<cmsghdr>());
+         if next > (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         } else {
+             (cmsg as usize + msg) as *mut cmsghdr
+         }
+diff --git a/src/unix/solarish/compat.rs b/src/unix/solarish/compat.rs
+index 649d6ac9a..80d283597 100644
+--- a/src/unix/solarish/compat.rs
++++ b/src/unix/solarish/compat.rs
+@@ -50,7 +50,7 @@ unsafe fn bail(fdm: c_int, fds: c_int) -> c_int {
+         crate::close(fdm);
+     }
+     *___errno() = e;
+-    return -1;
++    -1
+ }
+ 
+ #[cfg(target_os = "illumos")]
+@@ -184,7 +184,7 @@ pub unsafe fn getpwent_r(
+ ) -> c_int {
+     let old_errno = *crate::___errno();
+     *crate::___errno() = 0;
+-    *result = native_getpwent_r(pwd, buf, min(buflen, c_int::max_value() as size_t) as c_int);
++    *result = native_getpwent_r(pwd, buf, min(buflen, c_int::MAX as size_t) as c_int);
+ 
+     let ret = if (*result).is_null() {
+         *crate::___errno()
+@@ -204,7 +204,7 @@ pub unsafe fn getgrent_r(
+ ) -> c_int {
+     let old_errno = *crate::___errno();
+     *crate::___errno() = 0;
+-    *result = native_getgrent_r(grp, buf, min(buflen, c_int::max_value() as size_t) as c_int);
++    *result = native_getgrent_r(grp, buf, min(buflen, c_int::MAX as size_t) as c_int);
+ 
+     let ret = if (*result).is_null() {
+         *crate::___errno()
+diff --git a/src/unix/solarish/mod.rs b/src/unix/solarish/mod.rs
+index 652d5263a..605e35ca5 100644
+--- a/src/unix/solarish/mod.rs
++++ b/src/unix/solarish/mod.rs
+@@ -2483,7 +2483,7 @@ f! {
+ 
+     pub fn CMSG_FIRSTHDR(mhdr: *const crate::msghdr) -> *mut cmsghdr {
+         if ((*mhdr).msg_controllen as usize) < size_of::<cmsghdr>() {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         } else {
+             (*mhdr).msg_control as *mut cmsghdr
+         }
+@@ -2497,7 +2497,7 @@ f! {
+             _CMSG_HDR_ALIGN(cmsg as usize + (*cmsg).cmsg_len as usize + size_of::<cmsghdr>());
+         let max = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
+         if next > max {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         } else {
+             _CMSG_HDR_ALIGN(cmsg as usize + (*cmsg).cmsg_len as usize) as *mut cmsghdr
+         }
+diff --git a/src/vxworks/mod.rs b/src/vxworks/mod.rs
+index cdca84e47..793379dcd 100644
+--- a/src/vxworks/mod.rs
++++ b/src/vxworks/mod.rs
+@@ -1132,7 +1132,7 @@ f! {
+         if next <= max {
+             (cmsg as usize + CMSG_ALIGN((*cmsg).cmsg_len as usize)) as *mut cmsghdr
+         } else {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         }
+     }
+ 
+@@ -1140,7 +1140,7 @@ f! {
+         if (*mhdr).msg_controllen as usize > 0 {
+             (*mhdr).msg_control as *mut cmsghdr
+         } else {
+-            0 as *mut cmsghdr
++            core::ptr::null_mut::<cmsghdr>()
+         }
+     }
+ 
+-- 
+2.43.0
+

@@ -1,0 +1,131 @@
+From 4e7a6411eefe0a6b2b93ae163a4ca9a78a46ad0b Mon Sep 17 00:00:00 2001
+From: Ola x Nilsson <olani@axis.com>
+Date: Tue, 25 Mar 2025 16:04:44 +0100
+Subject: [PATCH 49/80] gnu: build settings for _TIME_BITS=64
+
+(backport <https://github.com/rust-lang/libc/pull/4433>)
+(cherry picked from commit 5f1eb6ca6f9fb13199468cdb09ecbbbc419c4108)
+---
+ build.rs           | 40 +++++++++++++++++++++++++++-------------
+ libc-test/build.rs | 39 +++++++++++++++++++++++++++------------
+ 2 files changed, 54 insertions(+), 25 deletions(-)
+
+diff --git a/build.rs b/build.rs
+index 6eafad542..5e1e62c51 100644
+--- a/build.rs
++++ b/build.rs
+@@ -15,6 +15,8 @@ const ALLOWED_CFGS: &[&str] = &[
+     "freebsd15",
+     // Corresponds to `_FILE_OFFSET_BITS=64` in glibc
+     "gnu_file_offset_bits64",
++    // Corresponds to `_TIME_BITS=64` in glibc
++    "gnu_time_bits64",
+     // FIXME(ctest): this config shouldn't be needed but ctest can't parse `const extern fn`
+     "libc_const_extern_fn",
+     "libc_deny_warnings",
+@@ -103,23 +105,35 @@ fn main() {
+         set_cfg("linux_time_bits64");
+     }
+     println!("cargo:rerun-if-env-changed=RUST_LIBC_UNSTABLE_GNU_FILE_OFFSET_BITS");
+-    match env::var("RUST_LIBC_UNSTABLE_GNU_FILE_OFFSET_BITS") {
+-        Ok(val) if val == "64" => {
+-            if target_env == "gnu"
+-                && target_os == "linux"
+-                && target_ptr_width == "32"
+-                && target_arch != "riscv32"
+-                && target_arch != "x86_64"
+-            {
++    println!("cargo:rerun-if-env-changed=RUST_LIBC_UNSTABLE_GNU_TIME_BITS");
++    if target_env == "gnu"
++        && target_os == "linux"
++        && target_ptr_width == "32"
++        && target_arch != "riscv32"
++        && target_arch != "x86_64"
++    {
++        match env::var("RUST_LIBC_UNSTABLE_GNU_TIME_BITS") {
++            Ok(val) if val == "64" => {
+                 set_cfg("gnu_file_offset_bits64");
++                set_cfg("linux_time_bits64");
++                set_cfg("gnu_time_bits64");
++            }
++            Ok(val) if val != "32" => {
++                panic!("RUST_LIBC_UNSTABLE_GNU_TIME_BITS may only be set to '32' or '64'")
++            }
++            _ => {
++                match env::var("RUST_LIBC_UNSTABLE_GNU_FILE_OFFSET_BITS") {
++                    Ok(val) if val == "64" => {
++                        set_cfg("gnu_file_offset_bits64");
++                    }
++                    Ok(val) if val != "32" => {
++                        panic!("RUST_LIBC_UNSTABLE_GNU_FILE_OFFSET_BITS may only be set to '32' or '64'")
++                    }
++                    _ => {}
++                }
+             }
+         }
+-        Ok(val) if val != "32" => {
+-            panic!("RUST_LIBC_UNSTABLE_GNU_FILE_OFFSET_BITS may only be set to '32' or '64'")
+-        }
+-        _ => {}
+     }
+-
+     // On CI: deny all warnings
+     if libc_ci {
+         set_cfg("libc_deny_warnings");
+diff --git a/libc-test/build.rs b/libc-test/build.rs
+index 4815715a5..ae0a54bdd 100644
+--- a/libc-test/build.rs
++++ b/libc-test/build.rs
+@@ -3689,22 +3689,37 @@ fn test_vxworks(target: &str) {
+ }
+ 
+ fn config_gnu_bits(target: &str, cfg: &mut ctest::TestGenerator) {
+-    match env::var("RUST_LIBC_UNSTABLE_GNU_FILE_OFFSET_BITS") {
+-        Ok(val) if val == "64" => {
+-            if target.contains("gnu")
+-                && target.contains("linux")
+-                && !target.ends_with("x32")
+-                && !target.contains("riscv32")
+-                && env::var("CARGO_CFG_TARGET_POINTER_WIDTH").unwrap() == "32"
+-            {
++    let pointer_width = env::var("CARGO_CFG_TARGET_POINTER_WIDTH").unwrap_or_default();
++    if target.contains("gnu")
++        && target.contains("linux")
++        && !target.ends_with("x32")
++        && !target.contains("riscv32")
++        && pointer_width == "32"
++    {
++        match env::var("RUST_LIBC_UNSTABLE_GNU_TIME_BITS") {
++            Ok(val) if val == "64" => {
+                 cfg.define("_FILE_OFFSET_BITS", Some("64"));
++                cfg.define("_TIME_BITS", Some("64"));
+                 cfg.cfg("gnu_file_offset_bits64", None);
++                cfg.cfg("linux_time_bits64", None);
++                cfg.cfg("gnu_time_bits64", None);
++            }
++            Ok(val) if val != "32" => {
++                panic!("RUST_LIBC_UNSTABLE_GNU_TIME_BITS may only be set to '32' or '64'")
++            }
++            _ => {
++                match env::var("RUST_LIBC_UNSTABLE_GNU_FILE_OFFSET_BITS") {
++                    Ok(val) if val == "64" => {
++                        cfg.define("_FILE_OFFSET_BITS", Some("64"));
++                        cfg.cfg("gnu_file_offset_bits64", None);
++                    }
++                    Ok(val) if val != "32" => {
++                        panic!("RUST_LIBC_UNSTABLE_GNU_FILE_OFFSET_BITS may only be set to '32' or '64'")
++                    }
++                    _ => {}
++                }
+             }
+         }
+-        Ok(val) if val != "32" => {
+-            panic!("RUST_LIBC_UNSTABLE_GNU_FILE_OFFSET_BITS may only be set to '32' or '64'")
+-        }
+-        _ => {}
+     }
+ }
+ 
+-- 
+2.43.0
+

@@ -1,0 +1,33 @@
+From 53301c2052d506dcc170cf7ebe91c9f241896588 Mon Sep 17 00:00:00 2001
+From: Trevor Gross <tmgross@umich.edu>
+Date: Mon, 2 Jun 2025 05:46:30 +0000
+Subject: [PATCH 69/80] lints: Warn rather than deny by default
+
+We check with `-Dwarnings` in CI, so these still get checked. This
+change serves to prevent failures to compile downstream if the lint
+expectations are not met on untested targets.
+
+(backport <https://github.com/rust-lang/libc/pull/4473>)
+(cherry picked from commit 260e35720ae963cedec40941775200ec3fee16cf)
+---
+ src/lib.rs | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/lib.rs b/src/lib.rs
+index 50aed357a..a2c09ce58 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -25,8 +25,8 @@
+ // DIFF(1.0): The thread local references that raise this lint were removed in 1.0
+ #![cfg_attr(feature = "rustc-dep-of-std", allow(static_mut_refs))]
+ // Enable extra lints:
+-#![cfg_attr(feature = "extra_traits", deny(missing_debug_implementations))]
+-#![deny(missing_copy_implementations, safe_packed_borrows)]
++#![cfg_attr(feature = "extra_traits", warn(missing_debug_implementations))]
++#![warn(missing_copy_implementations, safe_packed_borrows)]
+ #![cfg_attr(not(feature = "rustc-dep-of-std"), no_std)]
+ #![cfg_attr(feature = "rustc-dep-of-std", no_core)]
+ 
+-- 
+2.43.0
+

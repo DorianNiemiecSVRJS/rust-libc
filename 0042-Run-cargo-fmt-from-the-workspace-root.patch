@@ -1,0 +1,46 @@
+From 28e6ae297b1bd48789da1f66e4d1390829185fbf Mon Sep 17 00:00:00 2001
+From: Trevor Gross <tmgross@umich.edu>
+Date: Tue, 13 May 2025 21:14:57 +0000
+Subject: [PATCH 42/80] Run `cargo fmt` from the workspace root
+
+(backport <https://github.com/rust-lang/libc/pull/4454>)
+(cherry picked from commit adcb2b8258ab3b2f21678724f342e84fb28dff3e)
+---
+ build.rs           | 2 +-
+ src/windows/mod.rs | 7 ++++++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/build.rs b/build.rs
+index 2a55a4c07..6eafad542 100644
+--- a/build.rs
++++ b/build.rs
+@@ -22,7 +22,7 @@ const ALLOWED_CFGS: &[&str] = &[
+     "libc_ctest",
+     // Corresponds to `__USE_TIME_BITS64` in UAPI
+     "linux_time_bits64",
+-    "musl_v1_2_3"
++    "musl_v1_2_3",
+ ];
+ 
+ // Extra values to allow for check-cfg.
+diff --git a/src/windows/mod.rs b/src/windows/mod.rs
+index 8490b709b..5cafc855f 100644
+--- a/src/windows/mod.rs
++++ b/src/windows/mod.rs
+@@ -394,7 +394,12 @@ extern "C" {
+     #[link_name = "_get_timezone"]
+     pub fn get_timezone(seconds: *mut c_long) -> errno_t;
+     #[link_name = "_get_tzname"]
+-    pub fn get_tzname(p_return_value: *mut size_t, time_zone_name: *mut c_char, size_in_bytes: size_t, index: c_int) -> errno_t;
++    pub fn get_tzname(
++        p_return_value: *mut size_t,
++        time_zone_name: *mut c_char,
++        size_in_bytes: size_t,
++        index: c_int,
++    ) -> errno_t;
+     #[link_name = "_localtime64_s"]
+     pub fn localtime_s(tmDest: *mut tm, sourceTime: *const time_t) -> crate::errno_t;
+     #[link_name = "_time64"]
+-- 
+2.43.0
+

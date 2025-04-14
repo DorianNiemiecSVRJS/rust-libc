@@ -1,0 +1,31 @@
+From a64612fcc51ff37a275eff554bf59f0161261af5 Mon Sep 17 00:00:00 2001
+From: Huang Qi <huangqi3@xiaomi.com>
+Date: Wed, 28 May 2025 16:47:18 +0800
+Subject: [PATCH 47/80] Add arc4random and arc4random_buf to NuttX
+
+* Declare `arc4random` and `arc4random_buf` as extern "C" functions in the NuttX module
+* Enable access to system-provided random number generation for NuttX targets
+* Aligns NuttX FFI with other Unix platforms that expose these functions
+
+This change allows Rust code targeting NuttX to use `arc4random` and `arc4random_buf` for secure random number generation, improving compatibility and feature parity with other targets.
+
+(backport <https://github.com/rust-lang/libc/pull/4464>)
+(cherry picked from commit f8e47462b503fa432ac2b248a53d830b471b5ec1)
+---
+ src/unix/nuttx/mod.rs | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/unix/nuttx/mod.rs b/src/unix/nuttx/mod.rs
+index 015a2ba9a..de734f9e0 100644
+--- a/src/unix/nuttx/mod.rs
++++ b/src/unix/nuttx/mod.rs
+@@ -591,4 +591,6 @@ extern "C" {
+     pub fn pthread_setname_np(thread: pthread_t, name: *const c_char) -> i32;
+     pub fn pthread_getname_np(thread: pthread_t, name: *mut c_char, len: usize) -> i32;
+     pub fn getrandom(buf: *mut c_void, buflen: usize, flags: u32) -> isize;
++    pub fn arc4random() -> u32;
++    pub fn arc4random_buf(bytes: *mut c_void, nbytes: usize);
+ }
+-- 
+2.43.0
+

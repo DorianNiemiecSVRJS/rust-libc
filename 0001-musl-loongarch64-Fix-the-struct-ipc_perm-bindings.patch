@@ -1,0 +1,28 @@
+From 54e402fff47876fd152be1a67a307550685ee533 Mon Sep 17 00:00:00 2001
+From: WANG Rui <wangrui@loongson.cn>
+Date: Tue, 8 Apr 2025 11:06:15 +0800
+Subject: [PATCH 01/80] musl: loongarch64: Fix the struct ipc_perm bindings
+
+Refer: https://git.musl-libc.org/cgit/musl/tree/arch/generic/bits/ipc.h?h=v1.2.5
+
+(backport <https://github.com/rust-lang/libc/pull/4384>)
+(cherry picked from commit 65a7737ef234a7deb5e367571fa2de6106141e33)
+---
+ src/unix/linux_like/linux/musl/b64/loongarch64/mod.rs | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/unix/linux_like/linux/musl/b64/loongarch64/mod.rs b/src/unix/linux_like/linux/musl/b64/loongarch64/mod.rs
+index 36f05e10e..e96bcbb27 100644
+--- a/src/unix/linux_like/linux/musl/b64/loongarch64/mod.rs
++++ b/src/unix/linux_like/linux/musl/b64/loongarch64/mod.rs
+@@ -65,7 +65,6 @@ s! {
+         pub cgid: crate::gid_t,
+         pub mode: c_uint,
+         pub __seq: c_int,
+-        __pad2: c_ushort,
+         __unused1: c_ulong,
+         __unused2: c_ulong,
+     }
+-- 
+2.43.0
+

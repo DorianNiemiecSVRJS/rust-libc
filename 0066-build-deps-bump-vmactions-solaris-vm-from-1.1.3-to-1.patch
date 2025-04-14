@@ -1,0 +1,42 @@
+From a8e40d74139b43feb493d9356f0cbc4faa096cff Mon Sep 17 00:00:00 2001
+From: "dependabot[bot]" <49699333+dependabot[bot]@users.noreply.github.com>
+Date: Mon, 2 Jun 2025 15:26:30 +0000
+Subject: [PATCH 66/80] build(deps): bump vmactions/solaris-vm from 1.1.3 to
+ 1.1.4
+
+Bumps [vmactions/solaris-vm](https://github.com/vmactions/solaris-vm) from 1.1.3 to 1.1.4.
+- [Release notes](https://github.com/vmactions/solaris-vm/releases)
+- [Commits](https://github.com/vmactions/solaris-vm/compare/v1.1.3...v1.1.4)
+
+---
+updated-dependencies:
+- dependency-name: vmactions/solaris-vm
+  dependency-version: 1.1.4
+  dependency-type: direct:production
+  update-type: version-update:semver-patch
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+(backport <https://github.com/rust-lang/libc/pull/4474>)
+(cherry picked from commit c3cf1dec4c8553fe049536c050527e3f0343bae9)
+---
+ .github/workflows/ci.yaml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.github/workflows/ci.yaml b/.github/workflows/ci.yaml
+index 41bbd9970..86467f799 100644
+--- a/.github/workflows/ci.yaml
++++ b/.github/workflows/ci.yaml
+@@ -275,7 +275,7 @@ jobs:
+     steps:
+       - uses: actions/checkout@v4
+       - name: test on Solaris
+-        uses: vmactions/solaris-vm@v1.1.3
++        uses: vmactions/solaris-vm@v1.1.4
+         with:
+           release: "11.4-gcc"
+           usesh: true
+-- 
+2.43.0
+

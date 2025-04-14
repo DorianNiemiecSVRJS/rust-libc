@@ -1,0 +1,81 @@
+From 2aba8545d79551f1e7105bfeb1893739262012ab Mon Sep 17 00:00:00 2001
+From: Yuri Astrakhan <YuriAstrakhan@gmail.com>
+Date: Mon, 14 Apr 2025 22:57:49 -0400
+Subject: [PATCH 21/80] simplify clippy ci
+
+(backport <https://github.com/rust-lang/libc/pull/4411>)
+(cherry picked from commit 5997a8b58b7f348300c839a1bd5b82f7eee459a5)
+---
+ .github/workflows/ci.yaml | 12 ++++++++++++
+ ci/style.sh               |  3 ---
+ ci/verify-build.sh        |  7 -------
+ 3 files changed, 12 insertions(+), 10 deletions(-)
+
+diff --git a/.github/workflows/ci.yaml b/.github/workflows/ci.yaml
+index d581b362e..60e434014 100644
+--- a/.github/workflows/ci.yaml
++++ b/.github/workflows/ci.yaml
+@@ -30,6 +30,18 @@ jobs:
+       - name: Check style
+         run: ./ci/style.sh
+ 
++  clippy:
++    name: Clippy check
++    runs-on: ubuntu-24.04
++    timeout-minutes: 10
++    steps:
++      - uses: actions/checkout@v4
++      - uses: Swatinem/rust-cache@v2
++      # Here we use the latest stable Rust toolchain already installed by GitHub
++      # Ideally we should run it for every target, but we cannot rely on unstable toolchains
++      # due to Clippy not being consistent between them.
++      - run: cargo clippy --workspace --exclude libc-test --exclude ctest-test --all-targets -- -D warnings
++
+   # This runs `cargo build --target ...` for all T1 and T2 targets`
+   verify_build:
+     name: Verify build
+diff --git a/ci/style.sh b/ci/style.sh
+index 99fc2f12c..5b200796a 100755
+--- a/ci/style.sh
++++ b/ci/style.sh
+@@ -4,9 +4,6 @@ set -eux
+ 
+ [ -n "${CI:-}" ] && check="--check"
+ 
+-# TODO: for some reason using `--workspace` validates a lot of generated code in ./target/** dir
+-cargo clippy -p libc@1.0.0-alpha.1 -p ctest --all-targets -- -D warnings
+-
+ cargo test --manifest-path libc-test/Cargo.toml --test style -- --nocapture
+ 
+ command -v rustfmt
+diff --git a/ci/verify-build.sh b/ci/verify-build.sh
+index c99d04add..375a5de1b 100755
+--- a/ci/verify-build.sh
++++ b/ci/verify-build.sh
+@@ -44,13 +44,9 @@ test_target() {
+     # The basic command that is run each time
+     cmd="cargo +$rust build --target $target"
+ 
+-    # The basic clippy command
+-    clippy_cmd="cargo +$rust clippy --all-targets --target $target"
+-
+     if [ "${no_dist}" != "0" ]; then
+         # If we can't download a `core`, we need to build it
+         cmd="$cmd -Zbuild-std=core,alloc"
+-        clippy_cmd="$clippy_cmd -Zbuild-std=core,alloc"
+ 
+         # FIXME: With `build-std` feature, `compiler_builtins` emits a lof of lint warnings.
+         RUSTFLAGS="${RUSTFLAGS:-} -Aimproper_ctypes_definitions"
+@@ -71,9 +67,6 @@ test_target() {
+         done
+     fi
+ 
+-    # Run cargo clippy first
+-    $clippy_cmd
+-
+     # Test with expected combinations of features
+     $cmd
+     $cmd --features const-extern-fn
+-- 
+2.43.0
+

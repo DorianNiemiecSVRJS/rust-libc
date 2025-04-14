@@ -1,0 +1,33 @@
+From 1e47c9cf057bbfd19e55546010489c6a034dcc9b Mon Sep 17 00:00:00 2001
+From: Guus Waals <_@guusw.nl>
+Date: Thu, 23 Jan 2025 20:20:32 +0800
+Subject: [PATCH 09/80] Fix querying emcc on windows (use emcc.bat)
+
+(backport <https://github.com/rust-lang/libc/pull/4248>)
+(cherry picked from commit 1606561beafccb1b1e77d05a0bf117129681cabb)
+---
+ build.rs | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/build.rs b/build.rs
+index bf5277a9a..ec2c599ca 100644
+--- a/build.rs
++++ b/build.rs
+@@ -241,7 +241,13 @@ fn which_freebsd() -> Option<i32> {
+ }
+ 
+ fn emcc_version_code() -> Option<u64> {
+-    let output = Command::new("emcc").arg("-dumpversion").output().ok()?;
++    let emcc = if cfg!(target_os = "windows") {
++        "emcc.bat"
++    } else {
++        "emcc"
++    };
++
++    let output = Command::new(emcc).arg("-dumpversion").output().ok()?;
+     if !output.status.success() {
+         return None;
+     }
+-- 
+2.43.0
+

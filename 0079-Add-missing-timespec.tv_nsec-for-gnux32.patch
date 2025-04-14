@@ -1,0 +1,36 @@
+From 264a5399ab6e29bf29eac5c29c9f771eb6d58f5b Mon Sep 17 00:00:00 2001
+From: Ola x Nilsson <olani@axis.com>
+Date: Mon, 16 Jun 2025 17:11:16 +0200
+Subject: [PATCH 79/80] Add missing timespec.tv_nsec for gnux32
+
+The tv_nsec field was removed by mistake for gnux32 in bbaa0173daa4
+("gnu: Update struct timespec for GNU _TIME_BITS=64").
+
+Fixes #4495
+
+Link: https://github.com/bminor/glibc/blob/d1b27eeda3d92f33314e93537437cab11ddf4777/time/bits/types/struct_timespec.h#L11-L31
+
+[ add referenced commit summary and link to the message - Trevor ]
+
+(backport <https://github.com/rust-lang/libc/pull/4497>)
+(cherry picked from commit e9bd0b43e0b6830072e5af3e7c6618ec62732363)
+---
+ src/unix/linux_like/linux/gnu/mod.rs | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/unix/linux_like/linux/gnu/mod.rs b/src/unix/linux_like/linux/gnu/mod.rs
+index 4fc9a0aa2..e1ee70b74 100644
+--- a/src/unix/linux_like/linux/gnu/mod.rs
++++ b/src/unix/linux_like/linux/gnu/mod.rs
+@@ -366,6 +366,8 @@ s! {
+         __pad: i32,
+         #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+         pub tv_nsec: c_long,
++        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
++        pub tv_nsec: i64,
+         #[cfg(all(gnu_time_bits64, target_endian = "little"))]
+         __pad: i32,
+     }
+-- 
+2.43.0
+

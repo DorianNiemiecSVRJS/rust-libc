@@ -1,0 +1,122 @@
+From e70b031fbd4b10840f58fe84f97cf625d1b58bfd Mon Sep 17 00:00:00 2001
+From: Yuri Astrakhan <YuriAstrakhan@gmail.com>
+Date: Mon, 14 Apr 2025 22:46:54 -0400
+Subject: [PATCH 20/80] chore: add clippy CI tests
+
+run cargo clippy for all targets
+
+(backport <https://github.com/rust-lang/libc/pull/4411>)
+(cherry picked from commit bea4d1b0b893f222a837dcfa2ed1a100f1ed440a)
+---
+ Cargo.toml           | 22 ++++++++++++++++++++++
+ ci/style.sh          |  3 +++
+ ci/verify-build.sh   |  7 +++++++
+ libc-test/Cargo.toml | 23 +++++++++++++++++++++++
+ 4 files changed, 55 insertions(+)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 9e53e4511..8ae40020f 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -150,3 +150,25 @@ members = [
+     "ctest",
+     "libc-test",
+ ]
++
++#
++# TODO: These should be renamed as `[workspace.lints.*]` once MSRV is abve 1.64
++#       This way all crates can use it with `[lints] workspace=true` section
++#
++
++[lints.rust]
++# TODO: make ident usage consistent in each file
++unused_qualifications = "allow"
++
++[lints.clippy]
++# TODO: all these are default lints and should probably be fixed
++identity_op = "allow"
++if_same_then_else = "allow"
++missing_safety_doc = "allow"
++non_minimal_cfg = "allow"
++precedence = "allow"
++redundant_field_names = "allow"
++redundant_static_lifetimes = "allow"
++unnecessary_cast = "allow"
++unused_unit = "allow"
++zero_ptr = "allow"
+diff --git a/ci/style.sh b/ci/style.sh
+index 5b200796a..99fc2f12c 100755
+--- a/ci/style.sh
++++ b/ci/style.sh
+@@ -4,6 +4,9 @@ set -eux
+ 
+ [ -n "${CI:-}" ] && check="--check"
+ 
++# TODO: for some reason using `--workspace` validates a lot of generated code in ./target/** dir
++cargo clippy -p libc@1.0.0-alpha.1 -p ctest --all-targets -- -D warnings
++
+ cargo test --manifest-path libc-test/Cargo.toml --test style -- --nocapture
+ 
+ command -v rustfmt
+diff --git a/ci/verify-build.sh b/ci/verify-build.sh
+index 375a5de1b..c99d04add 100755
+--- a/ci/verify-build.sh
++++ b/ci/verify-build.sh
+@@ -44,9 +44,13 @@ test_target() {
+     # The basic command that is run each time
+     cmd="cargo +$rust build --target $target"
+ 
++    # The basic clippy command
++    clippy_cmd="cargo +$rust clippy --all-targets --target $target"
++
+     if [ "${no_dist}" != "0" ]; then
+         # If we can't download a `core`, we need to build it
+         cmd="$cmd -Zbuild-std=core,alloc"
++        clippy_cmd="$clippy_cmd -Zbuild-std=core,alloc"
+ 
+         # FIXME: With `build-std` feature, `compiler_builtins` emits a lof of lint warnings.
+         RUSTFLAGS="${RUSTFLAGS:-} -Aimproper_ctypes_definitions"
+@@ -67,6 +71,9 @@ test_target() {
+         done
+     fi
+ 
++    # Run cargo clippy first
++    $clippy_cmd
++
+     # Test with expected combinations of features
+     $cmd
+     $cmd --features const-extern-fn
+diff --git a/libc-test/Cargo.toml b/libc-test/Cargo.toml
+index 9573c3fdb..fe8d2866c 100644
+--- a/libc-test/Cargo.toml
++++ b/libc-test/Cargo.toml
+@@ -104,3 +104,26 @@ harness = true
+ name = "style_tests"
+ path = "test/style_tests.rs"
+ harness = true
++
++#
++# TODO: These should be moved to the root Cargo.toml as `[workspace.lints.*]` once MSRV is abve 1.64
++#       replace it with `[lints] workspace=true`
++#
++
++[lints.rust]
++# TODO: make ident usage consistent in each file
++unused_qualifications = "allow"
++
++[lints.clippy]
++# TODO: fix these, and enable pedantic lints with needed exceptions
++needless_return = "allow"
++comparison_to_empty = "allow"
++unused_io_amount = "allow"
++write_with_newline = "allow"
++needless_borrows_for_generic_args = "allow"
++only_used_in_recursion = "allow"
++match_like_matches_macro = "allow"
++useless_format = "allow"
++wildcard_in_or_patterns = "allow"
++nonminimal_bool = "allow"
++match_single_binding = "allow"
+-- 
+2.43.0
+

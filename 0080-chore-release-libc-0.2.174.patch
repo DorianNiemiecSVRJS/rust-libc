@@ -1,0 +1,52 @@
+From ce31fdaf1c78d37536827983890229b041fcc299 Mon Sep 17 00:00:00 2001
+From: Trevor Gross <tmgross@umich.edu>
+Date: Tue, 17 Jun 2025 10:22:52 +0000
+Subject: [PATCH 80/80] chore: release libc 0.2.174
+
+---
+ CHANGELOG.md | 17 +++++++++++++++++
+ Cargo.toml   |  2 +-
+ 2 files changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 0adc30258..fa193e550 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,22 @@
+ # Changelog
+ 
++## [0.2.174](https://github.com/rust-lang/libc/compare/0.2.173...0.2.174) - 2025-06-17
++
++### Added
++
++- Linux: Make `pidfd_info` fields pub ([#4487](https://github.com/rust-lang/libc/pull/4487))
++
++### Fixed
++
++- Gnu x32: Add missing `timespec.tv_nsec` ([#4497](https://github.com/rust-lang/libc/pull/4497))
++- NuttX: Use `nlink_t` type for `st_nlink` in `struct stat` definition ([#4483](https://github.com/rust-lang/libc/pull/4483))
++
++### Other
++
++- Allow new `unpredictable_function_pointer_comparisons` lints ([#4489](https://github.com/rust-lang/libc/pull/4489))
++- OpenBSD: Fix some clippy warnings to use `pointer::cast`. ([#4490](https://github.com/rust-lang/libc/pull/4490))
++- Remove unessecary semicolons from definitions of `CMSG_NXTHDR`. ([#4492](https://github.com/rust-lang/libc/pull/4492))
++
+ 
+ ## [0.2.173](https://github.com/rust-lang/libc/compare/0.2.172...0.2.173) - 2025-06-09
+ 
+diff --git a/Cargo.toml b/Cargo.toml
+index b9d9d73fd..9ac66aaea 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -1,6 +1,6 @@
+ [package]
+ name = "libc"
+-version = "0.2.173"
++version = "0.2.174"
+ keywords = ["libc", "ffi", "bindings", "operating", "system"]
+ categories = ["external-ffi-bindings", "no-std", "os"]
+ exclude = ["/ci/*", "/.github/*", "/.cirrus.yml", "/triagebot.toml"]
+-- 
+2.43.0
+

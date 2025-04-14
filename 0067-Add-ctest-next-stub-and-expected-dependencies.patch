@@ -1,0 +1,65 @@
+From 600d8adc2166cf8e95293b7caf2608d263c08b9f Mon Sep 17 00:00:00 2001
+From: mbyx <mbyx.dev@gmail.com>
+Date: Sun, 1 Jun 2025 23:05:28 +0500
+Subject: [PATCH 67/80] Add ctest-next stub and expected dependencies
+
+(backport <https://github.com/rust-lang/libc/pull/4467>)
+[ remove dependencies so this can remain a stub - Trevor ]
+(cherry picked from commit 0763c6553ad3e012509936c8b3a3ff54930e2bbe)
+---
+ Cargo.toml            |  1 +
+ ctest-next/Cargo.toml |  8 ++++++++
+ ctest-next/src/lib.rs | 14 ++++++++++++++
+ 3 files changed, 23 insertions(+)
+ create mode 100644 ctest-next/Cargo.toml
+ create mode 100644 ctest-next/src/lib.rs
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 0f6a6a7e5..1bdf875fc 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -148,6 +148,7 @@ use_std = ['std']
+ [workspace]
+ members = [
+     "ctest",
++    "ctest-next",
+     "libc-test",
+ ]
+ 
+diff --git a/ctest-next/Cargo.toml b/ctest-next/Cargo.toml
+new file mode 100644
+index 000000000..b30a6b30e
+--- /dev/null
++++ b/ctest-next/Cargo.toml
+@@ -0,0 +1,8 @@
++[package]
++name = "ctest-next"
++version = "0.1.0"
++edition = "2021"
++rust-version = "1.77"
++license = "MIT OR Apache-2.0"
++repository = "https://github.com/rust-lang/libc"
++publish = false
+diff --git a/ctest-next/src/lib.rs b/ctest-next/src/lib.rs
+new file mode 100644
+index 000000000..7d12d9af8
+--- /dev/null
++++ b/ctest-next/src/lib.rs
+@@ -0,0 +1,14 @@
++pub fn add(left: usize, right: usize) -> usize {
++    left + right
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn it_works() {
++        let result = add(2, 2);
++        assert_eq!(result, 4);
++    }
++}
+-- 
+2.43.0
+

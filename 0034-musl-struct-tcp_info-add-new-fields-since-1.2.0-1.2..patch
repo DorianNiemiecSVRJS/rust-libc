@@ -1,0 +1,67 @@
+From 37cde5af0a7a52e1aadadcfa38d28514d3bb75a7 Mon Sep 17 00:00:00 2001
+From: Reagan Bohan <xbjfk.github@gmail.com>
+Date: Sat, 3 May 2025 11:46:22 +0000
+Subject: [PATCH 34/80] musl: struct tcp_info: add new fields since 1.2.0/1.2.2
+
+This reflects the upstream commits, 5e0c9f2 and d4f2981, which reflect
+changes in linux 5.4 and 5.5 respectively
+
+As mentioned in the comments, this is possible now as the CI musl version
+has updated and the headers are newer.
+
+(backport <https://github.com/rust-lang/libc/pull/4443>)
+(cherry picked from commit fb4212a6bd14f0378a3c6fcdd6f8bd64cc79a8fb)
+---
+ libc-test/build.rs                    | 3 +++
+ src/unix/linux_like/linux/musl/mod.rs | 8 --------
+ 2 files changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/libc-test/build.rs b/libc-test/build.rs
+index 9506da357..5e6de7754 100644
+--- a/libc-test/build.rs
++++ b/libc-test/build.rs
+@@ -4205,6 +4205,9 @@ fn test_linux(target: &str) {
+             // FIXME(linux): Requires >= 6.4 kernel headers.
+             "ptrace_sud_config" => true,
+ 
++            // Struct has changed for new musl versions
++            "tcp_info" if old_musl => true,
++
+             _ => false,
+         }
+     });
+diff --git a/src/unix/linux_like/linux/musl/mod.rs b/src/unix/linux_like/linux/musl/mod.rs
+index efab9deaf..393d46b20 100644
+--- a/src/unix/linux_like/linux/musl/mod.rs
++++ b/src/unix/linux_like/linux/musl/mod.rs
+@@ -323,16 +323,11 @@ s! {
+         pub tcpi_probes: u8,
+         pub tcpi_backoff: u8,
+         pub tcpi_options: u8,
+-        /*
+-         * FIXME(musl): enable on all targets once musl headers are more up to date
+-         */
+         /// This contains the bitfields `tcpi_snd_wscale` and `tcpi_rcv_wscale`.
+         /// Each is 4 bits.
+-        #[cfg(target_arch = "loongarch64")]
+         pub tcpi_snd_rcv_wscale: u8,
+         /// This contains the bitfields `tcpi_delivery_rate_app_limited` (1 bit) and
+         /// `tcpi_fastopen_client_fail` (2 bits).
+-        #[cfg(target_arch = "loongarch64")]
+         pub tcpi_delivery_fastopen_bitfields: u8,
+         pub tcpi_rto: u32,
+         pub tcpi_ato: u32,
+@@ -378,10 +373,7 @@ s! {
+         pub tcpi_bytes_retrans: u64,
+         pub tcpi_dsack_dups: u32,
+         pub tcpi_reord_seen: u32,
+-        // FIXME(musl): enable on all targets once CI musl is updated
+-        #[cfg(target_arch = "loongarch64")]
+         pub tcpi_rcv_ooopack: u32,
+-        #[cfg(target_arch = "loongarch64")]
+         pub tcpi_snd_wnd: u32,
+     }
+ 
+-- 
+2.43.0
+

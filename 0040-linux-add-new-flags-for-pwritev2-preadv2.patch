@@ -1,0 +1,131 @@
+From 3db74e3ccb27d42a45be1577dd9537f7d281648b Mon Sep 17 00:00:00 2001
+From: The 8472 <git@infinite-source.de>
+Date: Sun, 11 May 2025 16:34:22 +0200
+Subject: [PATCH 40/80] linux: add new flags for pwritev2/preadv2
+
+(backport <https://github.com/rust-lang/libc/pull/4452>)
+(cherry picked from commit 6e7549d34f839aa3b76476df0408a155fec81186)
+---
+ libc-test/build.rs                    |  9 +++++++++
+ libc-test/semver/linux-gnu.txt        |  3 +++
+ libc-test/semver/linux-musl.txt       |  3 +++
+ src/unix/linux_like/linux/gnu/mod.rs  |  9 ---------
+ src/unix/linux_like/linux/mod.rs      | 12 ++++++++++++
+ src/unix/linux_like/linux/musl/mod.rs |  6 ------
+ 6 files changed, 27 insertions(+), 15 deletions(-)
+
+diff --git a/libc-test/build.rs b/libc-test/build.rs
+index 39adfd281..c0b051707 100644
+--- a/libc-test/build.rs
++++ b/libc-test/build.rs
+@@ -4542,6 +4542,15 @@ fn test_linux(target: &str) {
+             // kernel 6.2 minimum
+             "TUN_F_USO4" | "TUN_F_USO6" | "IFF_NO_CARRIER" => true,
+ 
++            // kernel 6.9 minimum
++            "RWF_NOAPPEND" => true,
++
++            // kernel 6.11 minimum
++            "RWF_ATOMIC" => true,
++
++            // kernel 6.14 minimum
++            "RWF_DONTCACHE" => true,
++
+             // FIXME(linux): Requires more recent kernel headers
+             | "IFLA_PARENT_DEV_NAME"     // linux v5.13+
+             | "IFLA_PARENT_DEV_BUS_NAME" // linux v5.13+
+diff --git a/libc-test/semver/linux-gnu.txt b/libc-test/semver/linux-gnu.txt
+index 7f0416904..c88da4fe9 100644
+--- a/libc-test/semver/linux-gnu.txt
++++ b/libc-test/semver/linux-gnu.txt
+@@ -389,8 +389,11 @@ RTM_NEWCACHEREPORT
+ RTM_NEWSTATS
+ RUN_LVL
+ RWF_APPEND
++RWF_ATOMIC
++RWF_DONTCACHE
+ RWF_DSYNC
+ RWF_HIPRI
++RWF_NOAPPEND
+ RWF_NOWAIT
+ RWF_SYNC
+ SECURITYFS_MAGIC
+diff --git a/libc-test/semver/linux-musl.txt b/libc-test/semver/linux-musl.txt
+index 462f45f7d..8497fe9cf 100644
+--- a/libc-test/semver/linux-musl.txt
++++ b/libc-test/semver/linux-musl.txt
+@@ -32,8 +32,11 @@ PR_SET_VMA
+ PR_SET_VMA_ANON_NAME
+ RUN_LVL
+ RWF_APPEND
++RWF_ATOMIC
++RWF_DONTCACHE
+ RWF_DSYNC
+ RWF_HIPRI
++RWF_NOAPPEND
+ RWF_NOWAIT
+ RWF_SYNC
+ USER_PROCESS
+diff --git a/src/unix/linux_like/linux/gnu/mod.rs b/src/unix/linux_like/linux/gnu/mod.rs
+index 5ba13dd6f..49b009470 100644
+--- a/src/unix/linux_like/linux/gnu/mod.rs
++++ b/src/unix/linux_like/linux/gnu/mod.rs
+@@ -942,15 +942,6 @@ pub const PTRACE_SYSCALL_INFO_SECCOMP: crate::__u8 = 3;
+ pub const PTRACE_SET_SYSCALL_USER_DISPATCH_CONFIG: crate::__u8 = 0x4210;
+ pub const PTRACE_GET_SYSCALL_USER_DISPATCH_CONFIG: crate::__u8 = 0x4211;
+ 
+-// linux/fs.h
+-
+-// Flags for preadv2/pwritev2
+-pub const RWF_HIPRI: c_int = 0x00000001;
+-pub const RWF_DSYNC: c_int = 0x00000002;
+-pub const RWF_SYNC: c_int = 0x00000004;
+-pub const RWF_NOWAIT: c_int = 0x00000008;
+-pub const RWF_APPEND: c_int = 0x00000010;
+-
+ // linux/rtnetlink.h
+ pub const TCA_PAD: c_ushort = 9;
+ pub const TCA_DUMP_INVISIBLE: c_ushort = 10;
+diff --git a/src/unix/linux_like/linux/mod.rs b/src/unix/linux_like/linux/mod.rs
+index e224666dd..941454205 100644
+--- a/src/unix/linux_like/linux/mod.rs
++++ b/src/unix/linux_like/linux/mod.rs
+@@ -2897,6 +2897,18 @@ pub const IFA_F_NOPREFIXROUTE: u32 = 0x200;
+ pub const IFA_F_MCAUTOJOIN: u32 = 0x400;
+ pub const IFA_F_STABLE_PRIVACY: u32 = 0x800;
+ 
++// linux/fs.h
++
++// Flags for preadv2/pwritev2
++pub const RWF_HIPRI: c_int = 0x00000001;
++pub const RWF_DSYNC: c_int = 0x00000002;
++pub const RWF_SYNC: c_int = 0x00000004;
++pub const RWF_NOWAIT: c_int = 0x00000008;
++pub const RWF_APPEND: c_int = 0x00000010;
++pub const RWF_NOAPPEND: c_int = 0x00000020;
++pub const RWF_ATOMIC: c_int = 0x00000040;
++pub const RWF_DONTCACHE: c_int = 0x00000080;
++
+ // linux/if_link.h
+ pub const IFLA_UNSPEC: c_ushort = 0;
+ pub const IFLA_ADDRESS: c_ushort = 1;
+diff --git a/src/unix/linux_like/linux/musl/mod.rs b/src/unix/linux_like/linux/musl/mod.rs
+index 393d46b20..993184767 100644
+--- a/src/unix/linux_like/linux/musl/mod.rs
++++ b/src/unix/linux_like/linux/musl/mod.rs
+@@ -747,12 +747,6 @@ pub const PTRACE_PEEKSIGINFO: c_int = 0x4209;
+ pub const PTRACE_GETSIGMASK: c_uint = 0x420a;
+ pub const PTRACE_SETSIGMASK: c_uint = 0x420b;
+ 
+-pub const RWF_HIPRI: c_int = 0x00000001;
+-pub const RWF_DSYNC: c_int = 0x00000002;
+-pub const RWF_SYNC: c_int = 0x00000004;
+-pub const RWF_NOWAIT: c_int = 0x00000008;
+-pub const RWF_APPEND: c_int = 0x00000010;
+-
+ pub const AF_IB: c_int = 27;
+ pub const AF_MPLS: c_int = 28;
+ pub const AF_NFC: c_int = 39;
+-- 
+2.43.0
+

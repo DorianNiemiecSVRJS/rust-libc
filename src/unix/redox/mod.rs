@@ -1262,18 +1262,8 @@ extern "C" {
     pub fn futimens(fd: c_int, times: *const crate::timespec) -> c_int;
 
     // sys/uio.h
-    pub fn preadv(
-        fd: c_int,
-        iov: *const crate::iovec,
-        iovcnt: c_int,
-        offset: off_t,
-    ) -> ssize_t;
-    pub fn pwritev(
-        fd: c_int,
-        iov: *const crate::iovec,
-        iovcnt: c_int,
-        offset: off_t,
-    ) -> ssize_t;
+    pub fn preadv(fd: c_int, iov: *const crate::iovec, iovcnt: c_int, offset: off_t) -> ssize_t;
+    pub fn pwritev(fd: c_int, iov: *const crate::iovec, iovcnt: c_int, offset: off_t) -> ssize_t;
     pub fn readv(fd: c_int, iov: *const crate::iovec, iovcnt: c_int) -> ssize_t;
     pub fn writev(fd: c_int, iov: *const crate::iovec, iovcnt: c_int) -> ssize_t;
 

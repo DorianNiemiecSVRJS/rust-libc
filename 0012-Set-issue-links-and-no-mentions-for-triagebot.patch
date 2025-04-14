@@ -1,0 +1,31 @@
+From 26e618b83433b807d14ba8c61184f029383bf418 Mon Sep 17 00:00:00 2001
+From: Trevor Gross <tmgross@umich.edu>
+Date: Sat, 26 Apr 2025 18:51:02 +0000
+Subject: [PATCH 12/80] Set issue-links and no-mentions for triagebot
+
+(backport <https://github.com/rust-lang/libc/pull/4431>)
+(cherry picked from commit e69ebcff733f3a2fd93f02edba474415d8bcf801)
+---
+ triagebot.toml | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/triagebot.toml b/triagebot.toml
+index f42f244bd..529367107 100644
+--- a/triagebot.toml
++++ b/triagebot.toml
+@@ -16,6 +16,12 @@ contributing_url = "https://github.com/rust-lang/libc/blob/HEAD/CONTRIBUTING.md"
+     "@tgross35",
+ ]
+ 
++# Ensure issue links link to this repo
++[issue-links]
++
++# Prevents mentions in commits to avoid users being spammed
++[no-mentions]
++
+ [autolabel."A-CI"]
+ trigger_files = [
+     ".cirrus.yml",
+-- 
+2.43.0
+

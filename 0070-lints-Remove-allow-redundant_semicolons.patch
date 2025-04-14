@@ -1,0 +1,28 @@
+From 7be1a7a7d818b6b92bb1ed726be985bc16869b5b Mon Sep 17 00:00:00 2001
+From: Trevor Gross <tmgross@umich.edu>
+Date: Mon, 2 Jun 2025 05:52:12 +0000
+Subject: [PATCH 70/80] lints: Remove `allow(redundant_semicolons)`
+
+(backport <https://github.com/rust-lang/libc/pull/4473>)
+(cherry picked from commit 0b6aa1b296ad12ea2062ae90a0cfe8688cdbef02)
+---
+ src/lib.rs | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/src/lib.rs b/src/lib.rs
+index a2c09ce58..879efcec4 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -7,9 +7,6 @@
+     bad_style,
+     overflowing_literals,
+     improper_ctypes,
+-    // This lint is renamed but we run CI for old stable rustc so should be here.
+-    redundant_semicolon,
+-    redundant_semicolons,
+     unused_macros,
+     unused_macro_rules,
+     // FIXME(1.0): temporarily allow dead_code to fix CI:
+-- 
+2.43.0
+

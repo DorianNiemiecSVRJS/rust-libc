@@ -1,0 +1,118 @@
+From e2f0562ebaf9d929ccd2c302d8860d497fab8adb Mon Sep 17 00:00:00 2001
+From: Ola x Nilsson <olani@axis.com>
+Date: Mon, 20 Mar 2023 14:22:31 +0100
+Subject: [PATCH 53/80] gnu: Update struct shmid_ds for 64-bit time
+
+References:
+
+Common definition for _TIME_BITS=64
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/bits/types/struct_shmid64_ds_helper.h
+
+Generic implementation used by x86 and arm:
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/bits/types/struct_shmid_ds.h
+
+PowerPC:
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/powerpc/bits/types/struct_shmid_ds.h
+
+MIPS: (no changes required)
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/mips/bits/types/struct_shmid_ds.h
+
+SPARC:
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/sparc/bits/types/struct_shmid_ds.h
+
+(backport <https://github.com/rust-lang/libc/pull/4433>)
+(cherry picked from commit 831b6269787ed0f226859352fdde1befaa249d03)
+---
+ src/unix/linux_like/linux/gnu/b32/arm/mod.rs   | 3 +++
+ src/unix/linux_like/linux/gnu/b32/powerpc.rs   | 7 +++++++
+ src/unix/linux_like/linux/gnu/b32/sparc/mod.rs | 6 ++++++
+ src/unix/linux_like/linux/gnu/b32/x86/mod.rs   | 3 +++
+ 4 files changed, 19 insertions(+)
+
+diff --git a/src/unix/linux_like/linux/gnu/b32/arm/mod.rs b/src/unix/linux_like/linux/gnu/b32/arm/mod.rs
+index 2dd4a8867..95cb23609 100644
+--- a/src/unix/linux_like/linux/gnu/b32/arm/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/arm/mod.rs
+@@ -115,10 +115,13 @@ s! {
+         pub shm_perm: crate::ipc_perm,
+         pub shm_segsz: size_t,
+         pub shm_atime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __unused1: c_ulong,
+         pub shm_dtime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __unused2: c_ulong,
+         pub shm_ctime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __unused3: c_ulong,
+         pub shm_cpid: crate::pid_t,
+         pub shm_lpid: crate::pid_t,
+diff --git a/src/unix/linux_like/linux/gnu/b32/powerpc.rs b/src/unix/linux_like/linux/gnu/b32/powerpc.rs
+index 36da977d6..0ecdbdd73 100644
+--- a/src/unix/linux_like/linux/gnu/b32/powerpc.rs
++++ b/src/unix/linux_like/linux/gnu/b32/powerpc.rs
+@@ -136,13 +136,20 @@ s! {
+ 
+     pub struct shmid_ds {
+         pub shm_perm: crate::ipc_perm,
++        #[cfg(gnu_time_bits64)]
++        pub shm_segsz: size_t,
++        #[cfg(not(gnu_time_bits64))]
+         __glibc_reserved1: c_uint,
+         pub shm_atime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __glibc_reserved2: c_uint,
+         pub shm_dtime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __glibc_reserved3: c_uint,
+         pub shm_ctime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __glibc_reserved4: c_uint,
++        #[cfg(not(gnu_time_bits64))]
+         pub shm_segsz: size_t,
+         pub shm_cpid: crate::pid_t,
+         pub shm_lpid: crate::pid_t,
+diff --git a/src/unix/linux_like/linux/gnu/b32/sparc/mod.rs b/src/unix/linux_like/linux/gnu/b32/sparc/mod.rs
+index 7533ad689..6081145cc 100644
+--- a/src/unix/linux_like/linux/gnu/b32/sparc/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/sparc/mod.rs
+@@ -154,12 +154,18 @@ s! {
+ 
+     pub struct shmid_ds {
+         pub shm_perm: crate::ipc_perm,
++        #[cfg(gnu_time_bits64)]
++        pub shm_segsz: size_t,
++        #[cfg(not(gnu_time_bits64))]
+         __pad1: c_uint,
+         pub shm_atime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __pad2: c_uint,
+         pub shm_dtime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __pad3: c_uint,
+         pub shm_ctime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         pub shm_segsz: size_t,
+         pub shm_cpid: crate::pid_t,
+         pub shm_lpid: crate::pid_t,
+diff --git a/src/unix/linux_like/linux/gnu/b32/x86/mod.rs b/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
+index c0eb9e89b..2f2751f44 100644
+--- a/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
+@@ -189,10 +189,13 @@ s! {
+         pub shm_perm: crate::ipc_perm,
+         pub shm_segsz: size_t,
+         pub shm_atime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __unused1: c_ulong,
+         pub shm_dtime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __unused2: c_ulong,
+         pub shm_ctime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __unused3: c_ulong,
+         pub shm_cpid: crate::pid_t,
+         pub shm_lpid: crate::pid_t,
+-- 
+2.43.0
+

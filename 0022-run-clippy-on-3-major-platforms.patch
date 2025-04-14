@@ -1,0 +1,104 @@
+From c544ee4d7ad012a4d0b14f2b1c85799331161c8b Mon Sep 17 00:00:00 2001
+From: Yuri Astrakhan <YuriAstrakhan@gmail.com>
+Date: Mon, 14 Apr 2025 23:03:23 -0400
+Subject: [PATCH 22/80] run clippy on 3 major platforms
+
+(backport <https://github.com/rust-lang/libc/pull/4411>)
+(cherry picked from commit e09683ea3523cde23c36ffe7ada2289b76a18618)
+---
+ .github/workflows/ci.yaml | 11 ++++++++---
+ Cargo.toml                | 11 +++++------
+ libc-test/Cargo.toml      | 10 ++++------
+ 3 files changed, 17 insertions(+), 15 deletions(-)
+
+diff --git a/.github/workflows/ci.yaml b/.github/workflows/ci.yaml
+index 60e434014..9b98d1d83 100644
+--- a/.github/workflows/ci.yaml
++++ b/.github/workflows/ci.yaml
+@@ -31,11 +31,15 @@ jobs:
+         run: ./ci/style.sh
+ 
+   clippy:
+-    name: Clippy check
+-    runs-on: ubuntu-24.04
++    name: Clippy on ${{ matrix.os }}
++    strategy:
++      matrix:
++        os: [ubuntu-24.04, macos-14, windows-2022]
++    runs-on: ${{ matrix.os }}
+     timeout-minutes: 10
+     steps:
+       - uses: actions/checkout@v4
++      - run: rustup update stable --no-self-update
+       - uses: Swatinem/rust-cache@v2
+       # Here we use the latest stable Rust toolchain already installed by GitHub
+       # Ideally we should run it for every target, but we cannot rely on unstable toolchains
+@@ -270,7 +274,8 @@ jobs:
+       - test_tier2
+       - test_tier2_vm
+       - verify_build
+-    # Github branch protection is exceedingly silly and treats "jobs skipped because a dependency
++      - clippy
++    # GitHub branch protection is exceedingly silly and treats "jobs skipped because a dependency
+     # failed" as success. So we have to do some contortions to ensure the job fails if any of its
+     # dependencies fails.
+     if: always() # make sure this is never "skipped"
+diff --git a/Cargo.toml b/Cargo.toml
+index 8ae40020f..88d748dc5 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -151,20 +151,19 @@ members = [
+     "libc-test",
+ ]
+ 
+-#
+-# TODO: These should be renamed as `[workspace.lints.*]` once MSRV is abve 1.64
++# FIXME(msrv): These should be renamed as `[workspace.lints.*]` once MSRV is above 1.64
+ #       This way all crates can use it with `[lints] workspace=true` section
+-#
+ 
+ [lints.rust]
+-# TODO: make ident usage consistent in each file
++# FIXME(cleanup): make ident usage consistent in each file
+ unused_qualifications = "allow"
+ 
+ [lints.clippy]
+-# TODO: all these are default lints and should probably be fixed
++missing_safety_doc = "allow"
++
++# FIXME(clippy): all these are default lints and should probably be fixed
+ identity_op = "allow"
+ if_same_then_else = "allow"
+-missing_safety_doc = "allow"
+ non_minimal_cfg = "allow"
+ precedence = "allow"
+ redundant_field_names = "allow"
+diff --git a/libc-test/Cargo.toml b/libc-test/Cargo.toml
+index fe8d2866c..9e7d176b7 100644
+--- a/libc-test/Cargo.toml
++++ b/libc-test/Cargo.toml
+@@ -105,17 +105,15 @@ name = "style_tests"
+ path = "test/style_tests.rs"
+ harness = true
+ 
+-#
+-# TODO: These should be moved to the root Cargo.toml as `[workspace.lints.*]` once MSRV is abve 1.64
+-#       replace it with `[lints] workspace=true`
+-#
++# FIXME(msrv): These should be moved to the root Cargo.toml as `[workspace.lints.*]`
++#              once MSRV is above 1.64 and replaced with `[lints] workspace=true`
+ 
+ [lints.rust]
+-# TODO: make ident usage consistent in each file
++# FIXME(cleanup): make ident usage consistent in each file
+ unused_qualifications = "allow"
+ 
+ [lints.clippy]
+-# TODO: fix these, and enable pedantic lints with needed exceptions
++# FIXME(clippy): fix these
+ needless_return = "allow"
+ comparison_to_empty = "allow"
+ unused_io_amount = "allow"
+-- 
+2.43.0
+

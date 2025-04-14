@@ -1,0 +1,46 @@
+From c08c5073efd877d7217bc32b5c6ec1b1248490d9 Mon Sep 17 00:00:00 2001
+From: Collin Funk <collin.funk1@gmail.com>
+Date: Sun, 15 Jun 2025 15:40:18 -0700
+Subject: [PATCH 75/80] openbsd: Fix some clippy warnings to use
+ `pointer::cast`.
+
+(backport <https://github.com/rust-lang/libc/pull/4490>)
+(cherry picked from commit 10b7252259cc6d23aba3c381f79a74e7ae86e702)
+---
+ src/unix/bsd/netbsdlike/openbsd/mod.rs | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/unix/bsd/netbsdlike/openbsd/mod.rs b/src/unix/bsd/netbsdlike/openbsd/mod.rs
+index 3b3971692..621b4038d 100644
+--- a/src/unix/bsd/netbsdlike/openbsd/mod.rs
++++ b/src/unix/bsd/netbsdlike/openbsd/mod.rs
+@@ -630,7 +630,7 @@ impl siginfo_t {
+             _pad: [c_int; SI_PAD],
+             _pid: crate::pid_t,
+         }
+-        (*(self as *const siginfo_t as *const siginfo_timer))._pid
++        (*(self as *const siginfo_t).cast::<siginfo_timer>())._pid
+     }
+ 
+     pub unsafe fn si_uid(&self) -> crate::uid_t {
+@@ -643,7 +643,7 @@ impl siginfo_t {
+             _pid: crate::pid_t,
+             _uid: crate::uid_t,
+         }
+-        (*(self as *const siginfo_t as *const siginfo_timer))._uid
++        (*(self as *const siginfo_t).cast::<siginfo_timer>())._uid
+     }
+ 
+     pub unsafe fn si_value(&self) -> crate::sigval {
+@@ -657,7 +657,7 @@ impl siginfo_t {
+             _uid: crate::uid_t,
+             value: crate::sigval,
+         }
+-        (*(self as *const siginfo_t as *const siginfo_timer)).value
++        (*(self as *const siginfo_t).cast::<siginfo_timer>()).value
+     }
+ }
+ 
+-- 
+2.43.0
+

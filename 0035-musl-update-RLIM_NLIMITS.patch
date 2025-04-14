@@ -1,0 +1,76 @@
+From f5d4b076c40dc8877c87f5e10dad913c366fa918 Mon Sep 17 00:00:00 2001
+From: Reagan Bohan <xbjfk.github@gmail.com>
+Date: Sat, 3 May 2025 11:57:39 +0000
+Subject: [PATCH 35/80] musl: update RLIM_NLIMITS
+
+This reflects upstream commit 2507e7f. This should be safe to change as
+this has been marked deprecated to warn people it will change across OS
+versions since 0.2.64 (>5 years ago)
+
+(backport <https://github.com/rust-lang/libc/pull/4443>)
+(cherry picked from commit 5d24ad2e30cfe0e8fab14feaeb1c19c7e34101e0)
+---
+ libc-test/build.rs                            | 4 ++++
+ src/unix/linux_like/linux/arch/generic/mod.rs | 3 ---
+ src/unix/linux_like/linux/arch/mips/mod.rs    | 2 +-
+ src/unix/linux_like/linux/arch/powerpc/mod.rs | 2 +-
+ 4 files changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/libc-test/build.rs b/libc-test/build.rs
+index 5e6de7754..351c0cc11 100644
+--- a/libc-test/build.rs
++++ b/libc-test/build.rs
+@@ -4339,6 +4339,10 @@ fn test_linux(target: &str) {
+             if old_musl && (riscv64 || x86_64) && name == "O_LARGEFILE" {
+                 return true;
+             }
++            // Values changed in newer musl versions
++            if old_musl && name == "RLIM_NLIMITS" {
++                return true;
++            }
+         }
+         match name {
+             // These constants are not available if gnu headers have been included
+diff --git a/src/unix/linux_like/linux/arch/generic/mod.rs b/src/unix/linux_like/linux/arch/generic/mod.rs
+index ec3179b43..75cb7e193 100644
+--- a/src/unix/linux_like/linux/arch/generic/mod.rs
++++ b/src/unix/linux_like/linux/arch/generic/mod.rs
+@@ -357,9 +357,6 @@ cfg_if! {
+         pub const RLIMIT_RTPRIO: c_int = 14;
+         pub const RLIMIT_RTTIME: c_int = 15;
+         #[deprecated(since = "0.2.64", note = "Not stable across OS versions")]
+-        #[cfg(not(target_arch = "loongarch64"))]
+-        pub const RLIM_NLIMITS: c_int = 15;
+-        #[cfg(target_arch = "loongarch64")]
+         pub const RLIM_NLIMITS: c_int = 16;
+         #[allow(deprecated)]
+         #[deprecated(since = "0.2.64", note = "Not stable across OS versions")]
+diff --git a/src/unix/linux_like/linux/arch/mips/mod.rs b/src/unix/linux_like/linux/arch/mips/mod.rs
+index eee7cc81a..1ac2340a2 100644
+--- a/src/unix/linux_like/linux/arch/mips/mod.rs
++++ b/src/unix/linux_like/linux/arch/mips/mod.rs
+@@ -349,7 +349,7 @@ cfg_if! {
+         pub const RLIMIT_RTPRIO: c_int = 14;
+         pub const RLIMIT_RTTIME: c_int = 15;
+         #[deprecated(since = "0.2.64", note = "Not stable across OS versions")]
+-        pub const RLIM_NLIMITS: c_int = 15;
++        pub const RLIM_NLIMITS: c_int = 16;
+         #[allow(deprecated)]
+         #[deprecated(since = "0.2.64", note = "Not stable across OS versions")]
+         pub const RLIMIT_NLIMITS: c_int = RLIM_NLIMITS;
+diff --git a/src/unix/linux_like/linux/arch/powerpc/mod.rs b/src/unix/linux_like/linux/arch/powerpc/mod.rs
+index 588b99a2d..23fac9fba 100644
+--- a/src/unix/linux_like/linux/arch/powerpc/mod.rs
++++ b/src/unix/linux_like/linux/arch/powerpc/mod.rs
+@@ -330,7 +330,7 @@ cfg_if! {
+         pub const RLIMIT_RTPRIO: c_int = 14;
+         pub const RLIMIT_RTTIME: c_int = 15;
+         #[deprecated(since = "0.2.64", note = "Not stable across OS versions")]
+-        pub const RLIM_NLIMITS: c_int = 15;
++        pub const RLIM_NLIMITS: c_int = 16;
+         #[allow(deprecated)]
+         #[deprecated(since = "0.2.64", note = "Not stable across OS versions")]
+         pub const RLIMIT_NLIMITS: c_int = RLIM_NLIMITS;
+-- 
+2.43.0
+

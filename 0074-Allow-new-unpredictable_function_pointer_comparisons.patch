@@ -1,0 +1,513 @@
+From 513405844c7dae4c3addc4066e3ac61bb68e4543 Mon Sep 17 00:00:00 2001
+From: Trevor Gross <tmgross@umich.edu>
+Date: Sun, 15 Jun 2025 22:35:16 +0000
+Subject: [PATCH 74/80] Allow new `unpredictable_function_pointer_comparisons`
+ lints
+
+These appeared in a recent nightly from our `PartialEq` derives. Add
+`allow`s where needed to suppress them, since removing the derive would
+be breaking.
+
+(backport <https://github.com/rust-lang/libc/pull/4489>)
+[ applied to PSP as well - Trevor ]
+(cherry picked from commit e6378105c41a6bf525bd6a746db11e0c52ce172e)
+---
+ src/fuchsia/mod.rs                                 |  2 ++
+ src/psp.rs                                         | 14 ++++++++++++++
+ src/unix/bsd/apple/b64/x86_64/mod.rs               |  2 ++
+ src/unix/bsd/freebsdlike/dragonfly/mod.rs          |  2 ++
+ src/unix/cygwin/mod.rs                             |  2 ++
+ src/unix/haiku/native.rs                           |  3 +++
+ src/unix/linux_like/android/b32/mod.rs             |  2 ++
+ src/unix/linux_like/android/b64/mod.rs             |  2 ++
+ src/unix/linux_like/emscripten/mod.rs              |  2 ++
+ src/unix/linux_like/linux/gnu/b32/arm/mod.rs       |  2 ++
+ src/unix/linux_like/linux/gnu/b32/csky/mod.rs      |  2 ++
+ src/unix/linux_like/linux/gnu/b32/m68k/mod.rs      |  2 ++
+ src/unix/linux_like/linux/gnu/b32/mips/mod.rs      |  2 ++
+ src/unix/linux_like/linux/gnu/b32/powerpc.rs       |  2 ++
+ src/unix/linux_like/linux/gnu/b32/riscv32/mod.rs   |  2 ++
+ src/unix/linux_like/linux/gnu/b32/sparc/mod.rs     |  2 ++
+ src/unix/linux_like/linux/gnu/b32/x86/mod.rs       |  2 ++
+ src/unix/linux_like/linux/gnu/b64/aarch64/mod.rs   |  2 ++
+ .../linux_like/linux/gnu/b64/loongarch64/mod.rs    |  2 ++
+ src/unix/linux_like/linux/gnu/b64/mips64/mod.rs    |  2 ++
+ src/unix/linux_like/linux/gnu/b64/powerpc64/mod.rs |  2 ++
+ src/unix/linux_like/linux/gnu/b64/riscv64/mod.rs   |  2 ++
+ src/unix/linux_like/linux/gnu/b64/s390x.rs         |  2 ++
+ src/unix/linux_like/linux/gnu/b64/sparc64/mod.rs   |  2 ++
+ src/unix/linux_like/linux/gnu/b64/x86_64/mod.rs    |  2 ++
+ src/unix/linux_like/linux/musl/mod.rs              |  2 ++
+ src/unix/linux_like/linux/uclibc/arm/mod.rs        |  2 ++
+ src/unix/linux_like/linux/uclibc/x86_64/mod.rs     |  2 ++
+ src/unix/nto/mod.rs                                |  2 ++
+ src/unix/nto/neutrino.rs                           |  2 ++
+ src/unix/redox/mod.rs                              |  2 ++
+ 31 files changed, 75 insertions(+)
+
+diff --git a/src/fuchsia/mod.rs b/src/fuchsia/mod.rs
+index bfd71ff78..22f9c6faf 100644
+--- a/src/fuchsia/mod.rs
++++ b/src/fuchsia/mod.rs
+@@ -292,6 +292,8 @@ s! {
+         __dummy4: [c_char; 16],
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/psp.rs b/src/psp.rs
+index 56d528cff..131ef3180 100644
+--- a/src/psp.rs
++++ b/src/psp.rs
+@@ -1415,6 +1415,8 @@ s! {
+         pub stack: [u32; 8],
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct GeCallbackData {
+         pub signal_func: Option<extern "C" fn(id: i32, arg: *mut c_void)>,
+         pub signal_arg: *mut c_void,
+@@ -1537,6 +1539,8 @@ s! {
+         pub stack_mpid: SceUid,
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct SceKernelThreadInfo {
+         pub size: usize,
+         pub name: [u8; 32],
+@@ -1611,6 +1615,8 @@ s! {
+         pub first_message: *mut c_void,
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct SceKernelVTimerInfo {
+         pub size: usize,
+         pub name: [u8; 32],
+@@ -1622,6 +1628,8 @@ s! {
+         pub common: *mut c_void,
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct SceKernelThreadEventHandlerInfo {
+         pub size: usize,
+         pub name: [u8; 32],
+@@ -1631,6 +1639,8 @@ s! {
+         pub common: *mut c_void,
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct SceKernelAlarmInfo {
+         pub size: usize,
+         pub schedule: SceKernelSysClock,
+@@ -1688,6 +1698,8 @@ s! {
+         pub size: usize,
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct SceKernelCallbackInfo {
+         pub size: usize,
+         pub name: [u8; 32usize],
+@@ -1787,6 +1799,8 @@ s! {
+         pub type_: UmdType,
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct SceMpegRingbuffer {
+         pub packets: i32,
+         pub unk0: u32,
+diff --git a/src/unix/bsd/apple/b64/x86_64/mod.rs b/src/unix/bsd/apple/b64/x86_64/mod.rs
+index aa5ab85c0..cfb1b8a8a 100644
+--- a/src/unix/bsd/apple/b64/x86_64/mod.rs
++++ b/src/unix/bsd/apple/b64/x86_64/mod.rs
+@@ -109,6 +109,8 @@ s! {
+         _private: [crate::uintptr_t; 16], // FIXME(macos): keeping private for now
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct malloc_zone_t {
+         _reserved1: *mut c_void,
+         _reserved2: *mut c_void,
+diff --git a/src/unix/bsd/freebsdlike/dragonfly/mod.rs b/src/unix/bsd/freebsdlike/dragonfly/mod.rs
+index 168c85094..8ecb33362 100644
+--- a/src/unix/bsd/freebsdlike/dragonfly/mod.rs
++++ b/src/unix/bsd/freebsdlike/dragonfly/mod.rs
+@@ -520,6 +520,8 @@ s_no_extra_traits! {
+         pub mc_fpregs: [[c_uint; 8]; 32],
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct ucontext_t {
+         pub uc_sigmask: crate::sigset_t,
+         pub uc_mcontext: mcontext_t,
+diff --git a/src/unix/cygwin/mod.rs b/src/unix/cygwin/mod.rs
+index 2986c7c74..b03c88202 100644
+--- a/src/unix/cygwin/mod.rs
++++ b/src/unix/cygwin/mod.rs
+@@ -351,6 +351,8 @@ s! {
+         pub cr2: u64,
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigevent {
+         pub sigev_value: sigval,
+         pub sigev_signo: c_int,
+diff --git a/src/unix/haiku/native.rs b/src/unix/haiku/native.rs
+index a5a5e5349..446c2fa04 100644
+--- a/src/unix/haiku/native.rs
++++ b/src/unix/haiku/native.rs
+@@ -403,11 +403,14 @@ s! {
+     }
+ 
+     // kernel/image.h
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct image_info {
+         pub id: image_id,
+         pub image_type: c_int,
+         pub sequence: i32,
+         pub init_order: i32,
++        // FIXME(1.0): these should be made optional
+         pub init_routine: extern "C" fn(),
+         pub term_routine: extern "C" fn(),
+         pub device: crate::dev_t,
+diff --git a/src/unix/linux_like/android/b32/mod.rs b/src/unix/linux_like/android/b32/mod.rs
+index 43e739bd9..d02dbf92d 100644
+--- a/src/unix/linux_like/android/b32/mod.rs
++++ b/src/unix/linux_like/android/b32/mod.rs
+@@ -12,6 +12,8 @@ pub type __u64 = c_ulonglong;
+ pub type __s64 = c_longlong;
+ 
+ s! {
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/unix/linux_like/android/b64/mod.rs b/src/unix/linux_like/android/b64/mod.rs
+index b23c562cd..e16c251a6 100644
+--- a/src/unix/linux_like/android/b64/mod.rs
++++ b/src/unix/linux_like/android/b64/mod.rs
+@@ -12,6 +12,8 @@ s! {
+         __val: [c_ulong; 1],
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_flags: c_int,
+         pub sa_sigaction: crate::sighandler_t,
+diff --git a/src/unix/linux_like/emscripten/mod.rs b/src/unix/linux_like/emscripten/mod.rs
+index deac314ce..a7dc492ed 100644
+--- a/src/unix/linux_like/emscripten/mod.rs
++++ b/src/unix/linux_like/emscripten/mod.rs
+@@ -158,6 +158,8 @@ s! {
+         pub sem_flg: c_short,
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/unix/linux_like/linux/gnu/b32/arm/mod.rs b/src/unix/linux_like/linux/gnu/b32/arm/mod.rs
+index 80d7be389..3f81de354 100644
+--- a/src/unix/linux_like/linux/gnu/b32/arm/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/arm/mod.rs
+@@ -4,6 +4,8 @@ use crate::{off64_t, off_t};
+ pub type wchar_t = u32;
+ 
+ s! {
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/unix/linux_like/linux/gnu/b32/csky/mod.rs b/src/unix/linux_like/linux/gnu/b32/csky/mod.rs
+index 89189e633..b8f73e2d5 100644
+--- a/src/unix/linux_like/linux/gnu/b32/csky/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/csky/mod.rs
+@@ -4,6 +4,8 @@ use crate::{off64_t, off_t};
+ pub type wchar_t = u32;
+ 
+ s! {
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/unix/linux_like/linux/gnu/b32/m68k/mod.rs b/src/unix/linux_like/linux/gnu/b32/m68k/mod.rs
+index b4c63c1df..fe4b05f4e 100644
+--- a/src/unix/linux_like/linux/gnu/b32/m68k/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/m68k/mod.rs
+@@ -4,6 +4,8 @@ use crate::{off64_t, off_t};
+ pub type wchar_t = i32;
+ 
+ s! {
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/unix/linux_like/linux/gnu/b32/mips/mod.rs b/src/unix/linux_like/linux/gnu/b32/mips/mod.rs
+index 6581d729e..507672f8a 100644
+--- a/src/unix/linux_like/linux/gnu/b32/mips/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/mips/mod.rs
+@@ -163,6 +163,8 @@ s! {
+         __f_spare: [c_int; 6],
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_flags: c_int,
+         pub sa_sigaction: crate::sighandler_t,
+diff --git a/src/unix/linux_like/linux/gnu/b32/powerpc.rs b/src/unix/linux_like/linux/gnu/b32/powerpc.rs
+index d562aac37..791f14956 100644
+--- a/src/unix/linux_like/linux/gnu/b32/powerpc.rs
++++ b/src/unix/linux_like/linux/gnu/b32/powerpc.rs
+@@ -4,6 +4,8 @@ use crate::{off64_t, off_t};
+ pub type wchar_t = i32;
+ 
+ s! {
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/unix/linux_like/linux/gnu/b32/riscv32/mod.rs b/src/unix/linux_like/linux/gnu/b32/riscv32/mod.rs
+index bcae7c204..d9599ddb5 100644
+--- a/src/unix/linux_like/linux/gnu/b32/riscv32/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/riscv32/mod.rs
+@@ -108,6 +108,8 @@ s! {
+         pub ss_size: size_t,
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/unix/linux_like/linux/gnu/b32/sparc/mod.rs b/src/unix/linux_like/linux/gnu/b32/sparc/mod.rs
+index 03760e72e..cfe2101b4 100644
+--- a/src/unix/linux_like/linux/gnu/b32/sparc/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/sparc/mod.rs
+@@ -6,6 +6,8 @@ use crate::{off64_t, off_t};
+ pub type wchar_t = i32;
+ 
+ s! {
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/unix/linux_like/linux/gnu/b32/x86/mod.rs b/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
+index 0f23f0033..da6af9437 100644
+--- a/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
+@@ -5,6 +5,8 @@ pub type wchar_t = i32;
+ pub type greg_t = i32;
+ 
+ s! {
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/unix/linux_like/linux/gnu/b64/aarch64/mod.rs b/src/unix/linux_like/linux/gnu/b64/aarch64/mod.rs
+index 0e990f600..b310af8e4 100644
+--- a/src/unix/linux_like/linux/gnu/b64/aarch64/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b64/aarch64/mod.rs
+@@ -11,6 +11,8 @@ pub type __u64 = c_ulonglong;
+ pub type __s64 = c_longlong;
+ 
+ s! {
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/unix/linux_like/linux/gnu/b64/loongarch64/mod.rs b/src/unix/linux_like/linux/gnu/b64/loongarch64/mod.rs
+index 6162565da..c67177c70 100644
+--- a/src/unix/linux_like/linux/gnu/b64/loongarch64/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b64/loongarch64/mod.rs
+@@ -134,6 +134,8 @@ s! {
+         __size: [c_ulong; 7],
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/unix/linux_like/linux/gnu/b64/mips64/mod.rs b/src/unix/linux_like/linux/gnu/b64/mips64/mod.rs
+index 375ea40cb..8bd9542a6 100644
+--- a/src/unix/linux_like/linux/gnu/b64/mips64/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b64/mips64/mod.rs
+@@ -136,6 +136,8 @@ s! {
+         __size: [c_ulong; 7],
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_flags: c_int,
+         pub sa_sigaction: crate::sighandler_t,
+diff --git a/src/unix/linux_like/linux/gnu/b64/powerpc64/mod.rs b/src/unix/linux_like/linux/gnu/b64/powerpc64/mod.rs
+index e537dbcd0..5073a8af7 100644
+--- a/src/unix/linux_like/linux/gnu/b64/powerpc64/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b64/powerpc64/mod.rs
+@@ -11,6 +11,8 @@ pub type __u64 = c_ulong;
+ pub type __s64 = c_long;
+ 
+ s! {
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/unix/linux_like/linux/gnu/b64/riscv64/mod.rs b/src/unix/linux_like/linux/gnu/b64/riscv64/mod.rs
+index d689bb14c..6da6eeccc 100644
+--- a/src/unix/linux_like/linux/gnu/b64/riscv64/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b64/riscv64/mod.rs
+@@ -143,6 +143,8 @@ s! {
+         pub ss_size: size_t,
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/unix/linux_like/linux/gnu/b64/s390x.rs b/src/unix/linux_like/linux/gnu/b64/s390x.rs
+index aa42a025d..029485c5b 100644
+--- a/src/unix/linux_like/linux/gnu/b64/s390x.rs
++++ b/src/unix/linux_like/linux/gnu/b64/s390x.rs
+@@ -12,6 +12,8 @@ pub type __u64 = u64;
+ pub type __s64 = i64;
+ 
+ s! {
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         __glibc_reserved0: c_int,
+diff --git a/src/unix/linux_like/linux/gnu/b64/sparc64/mod.rs b/src/unix/linux_like/linux/gnu/b64/sparc64/mod.rs
+index f77606e10..cdbd9b43b 100644
+--- a/src/unix/linux_like/linux/gnu/b64/sparc64/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b64/sparc64/mod.rs
+@@ -11,6 +11,8 @@ pub type __u64 = c_ulonglong;
+ pub type __s64 = c_longlong;
+ 
+ s! {
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/unix/linux_like/linux/gnu/b64/x86_64/mod.rs b/src/unix/linux_like/linux/gnu/b64/x86_64/mod.rs
+index e76ae7512..ea8aeda42 100644
+--- a/src/unix/linux_like/linux/gnu/b64/x86_64/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b64/x86_64/mod.rs
+@@ -12,6 +12,8 @@ pub type __u64 = c_ulonglong;
+ pub type __s64 = c_longlong;
+ 
+ s! {
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/unix/linux_like/linux/musl/mod.rs b/src/unix/linux_like/linux/musl/mod.rs
+index fb083fd54..e2afbd860 100644
+--- a/src/unix/linux_like/linux/musl/mod.rs
++++ b/src/unix/linux_like/linux/musl/mod.rs
+@@ -142,6 +142,8 @@ s! {
+         __dummy4: [c_char; 16],
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_mask: crate::sigset_t,
+diff --git a/src/unix/linux_like/linux/uclibc/arm/mod.rs b/src/unix/linux_like/linux/uclibc/arm/mod.rs
+index 7a517f497..c54d77b19 100644
+--- a/src/unix/linux_like/linux/uclibc/arm/mod.rs
++++ b/src/unix/linux_like/linux/uclibc/arm/mod.rs
+@@ -163,6 +163,8 @@ s! {
+         __val: [c_ulong; 2],
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_flags: c_ulong,
+diff --git a/src/unix/linux_like/linux/uclibc/x86_64/mod.rs b/src/unix/linux_like/linux/uclibc/x86_64/mod.rs
+index 4a6c19fc9..fbc87be74 100644
+--- a/src/unix/linux_like/linux/uclibc/x86_64/mod.rs
++++ b/src/unix/linux_like/linux/uclibc/x86_64/mod.rs
+@@ -144,6 +144,8 @@ s! {
+         st_pad4: [c_long; 3],
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_handler: crate::sighandler_t,
+         pub sa_flags: c_ulong,
+diff --git a/src/unix/nto/mod.rs b/src/unix/nto/mod.rs
+index 581b99e67..7270beaca 100644
+--- a/src/unix/nto/mod.rs
++++ b/src/unix/nto/mod.rs
+@@ -576,6 +576,8 @@ s! {
+         re_g: *mut c_void,
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct _thread_attr {
+         pub __flags: c_int,
+         pub __stacksize: size_t,
+diff --git a/src/unix/nto/neutrino.rs b/src/unix/nto/neutrino.rs
+index 71a2301d1..8aac46800 100644
+--- a/src/unix/nto/neutrino.rs
++++ b/src/unix/nto/neutrino.rs
+@@ -137,6 +137,8 @@ s! {
+         pub ev: crate::__c_anonymous_struct_ev,
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct _sighandler_info {
+         pub siginfo: crate::siginfo_t,
+         pub handler: Option<unsafe extern "C" fn(value: c_int)>,
+diff --git a/src/unix/redox/mod.rs b/src/unix/redox/mod.rs
+index 859cdccde..9a79d0e28 100644
+--- a/src/unix/redox/mod.rs
++++ b/src/unix/redox/mod.rs
+@@ -157,6 +157,8 @@ s! {
+         pub pw_shell: *mut c_char,
+     }
+ 
++    // FIXME(1.0): This should not implement `PartialEq`
++    #[allow(unpredictable_function_pointer_comparisons)]
+     pub struct sigaction {
+         pub sa_sigaction: crate::sighandler_t,
+         pub sa_flags: c_ulong,
+-- 
+2.43.0
+

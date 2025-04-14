@@ -1,0 +1,46 @@
+From e56ab23a97422d770618c7d5a54fd33435c4d2f6 Mon Sep 17 00:00:00 2001
+From: Petr Sumbera <sumbera@volny.cz>
+Date: Mon, 26 May 2025 10:34:46 +0200
+Subject: [PATCH 19/80] Fixes Solaris CI after solaris-vm was updated to
+ Solaris 11.4.81 CBE
+
+It also specifies exact solaris-vm version to avoid future disruptions.
+
+(backport <https://github.com/rust-lang/libc/pull/4462>)
+(cherry picked from commit d450f9c27a4f0a28087f7d0cba9d680bf8b0b233)
+---
+ .github/workflows/ci.yaml   | 2 +-
+ src/unix/solarish/x86_64.rs | 4 +++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/.github/workflows/ci.yaml b/.github/workflows/ci.yaml
+index 73d2f9f42..d581b362e 100644
+--- a/.github/workflows/ci.yaml
++++ b/.github/workflows/ci.yaml
+@@ -232,7 +232,7 @@ jobs:
+     steps:
+       - uses: actions/checkout@v4
+       - name: test on Solaris
+-        uses: vmactions/solaris-vm@v1
++        uses: vmactions/solaris-vm@v1.1.3
+         with:
+           release: "11.4-gcc"
+           usesh: true
+diff --git a/src/unix/solarish/x86_64.rs b/src/unix/solarish/x86_64.rs
+index 4deaac0fc..2f82d2448 100644
+--- a/src/unix/solarish/x86_64.rs
++++ b/src/unix/solarish/x86_64.rs
+@@ -91,7 +91,9 @@ s_no_extra_traits! {
+         #[cfg(target_os = "solaris")]
+         pub uc_xrs: solaris::xrs_t,
+         #[cfg(target_os = "solaris")]
+-        pub uc_filler: [c_long; 3],
++        pub uc_lwpid: c_uint,
++        #[cfg(target_os = "solaris")]
++        pub uc_filler: [c_long; 2],
+     }
+ }
+ 
+-- 
+2.43.0
+

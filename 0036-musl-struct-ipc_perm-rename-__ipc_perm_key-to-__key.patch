@@ -1,0 +1,237 @@
+From 53a99ed92101a787c87e3e57f121549b9100039d Mon Sep 17 00:00:00 2001
+From: Reagan Bohan <xbjfk.github@gmail.com>
+Date: Sat, 3 May 2025 12:31:19 +0000
+Subject: [PATCH 36/80] musl: struct ipc_perm: rename `__ipc_perm_key` to
+ `__key`
+
+This isn't strictly related to musl 1.2.3, however now presents a good
+time to change it, before the 1.0 release.
+
+(backport <https://github.com/rust-lang/libc/pull/4443>)
+(cherry picked from commit 3f81aadb0f1d1381c78f9b49da5267b3c466b138)
+---
+ src/unix/linux_like/linux/musl/b32/arm/mod.rs     | 8 ++++++++
+ src/unix/linux_like/linux/musl/b32/hexagon.rs     | 8 ++++++++
+ src/unix/linux_like/linux/musl/b32/mips/mod.rs    | 8 ++++++++
+ src/unix/linux_like/linux/musl/b32/powerpc.rs     | 8 ++++++++
+ src/unix/linux_like/linux/musl/b32/x86/mod.rs     | 8 ++++++++
+ src/unix/linux_like/linux/musl/b64/aarch64/mod.rs | 8 ++++++++
+ src/unix/linux_like/linux/musl/b64/mips64.rs      | 8 ++++++++
+ src/unix/linux_like/linux/musl/b64/powerpc64.rs   | 8 ++++++++
+ src/unix/linux_like/linux/musl/b64/s390x.rs       | 8 ++++++++
+ src/unix/linux_like/linux/musl/b64/wasm32/mod.rs  | 8 ++++++++
+ src/unix/linux_like/linux/musl/b64/x86_64/mod.rs  | 8 ++++++++
+ 11 files changed, 88 insertions(+)
+
+diff --git a/src/unix/linux_like/linux/musl/b32/arm/mod.rs b/src/unix/linux_like/linux/musl/b32/arm/mod.rs
+index 292585fc3..a79b3fa37 100644
+--- a/src/unix/linux_like/linux/musl/b32/arm/mod.rs
++++ b/src/unix/linux_like/linux/musl/b32/arm/mod.rs
+@@ -55,6 +55,14 @@ s! {
+     }
+ 
+     pub struct ipc_perm {
++        #[cfg(musl_v1_2_3)]
++        pub __key: crate::key_t,
++        #[cfg(not(musl_v1_2_3))]
++        #[deprecated(
++            since = "0.2.173",
++            note = "This field is incorrectly named and will be changed
++                to __key in a future release."
++        )]
+         pub __ipc_perm_key: crate::key_t,
+         pub uid: crate::uid_t,
+         pub gid: crate::gid_t,
+diff --git a/src/unix/linux_like/linux/musl/b32/hexagon.rs b/src/unix/linux_like/linux/musl/b32/hexagon.rs
+index 4aab076e1..b68795355 100644
+--- a/src/unix/linux_like/linux/musl/b32/hexagon.rs
++++ b/src/unix/linux_like/linux/musl/b32/hexagon.rs
+@@ -34,6 +34,14 @@ s! {
+     }
+ 
+     pub struct ipc_perm {
++        #[cfg(musl_v1_2_3)]
++        pub __key: crate::key_t,
++        #[cfg(not(musl_v1_2_3))]
++        #[deprecated(
++            since = "0.2.173",
++            note = "This field is incorrectly named and will be changed
++                to __key in a future release"
++        )]
+         pub __ipc_perm_key: crate::key_t,
+         pub uid: crate::uid_t,
+         pub gid: crate::gid_t,
+diff --git a/src/unix/linux_like/linux/musl/b32/mips/mod.rs b/src/unix/linux_like/linux/musl/b32/mips/mod.rs
+index e0b35b6c5..3f2b73dec 100644
+--- a/src/unix/linux_like/linux/musl/b32/mips/mod.rs
++++ b/src/unix/linux_like/linux/musl/b32/mips/mod.rs
+@@ -57,6 +57,14 @@ s! {
+     }
+ 
+     pub struct ipc_perm {
++        #[cfg(musl_v1_2_3)]
++        pub __key: crate::key_t,
++        #[cfg(not(musl_v1_2_3))]
++        #[deprecated(
++            since = "0.2.173",
++            note = "This field is incorrectly named and will be changed
++                to __key in a future release."
++        )]
+         pub __ipc_perm_key: crate::key_t,
+         pub uid: crate::uid_t,
+         pub gid: crate::gid_t,
+diff --git a/src/unix/linux_like/linux/musl/b32/powerpc.rs b/src/unix/linux_like/linux/musl/b32/powerpc.rs
+index 0de40b150..460b2d8fc 100644
+--- a/src/unix/linux_like/linux/musl/b32/powerpc.rs
++++ b/src/unix/linux_like/linux/musl/b32/powerpc.rs
+@@ -53,6 +53,14 @@ s! {
+     }
+ 
+     pub struct ipc_perm {
++        #[cfg(musl_v1_2_3)]
++        pub __key: crate::key_t,
++        #[cfg(not(musl_v1_2_3))]
++        #[deprecated(
++            since = "0.2.173",
++            note = "This field is incorrectly named and will be changed
++                to __key in a future release."
++        )]
+         pub __ipc_perm_key: crate::key_t,
+         pub uid: crate::uid_t,
+         pub gid: crate::gid_t,
+diff --git a/src/unix/linux_like/linux/musl/b32/x86/mod.rs b/src/unix/linux_like/linux/musl/b32/x86/mod.rs
+index 22befbb0b..c42bed669 100644
+--- a/src/unix/linux_like/linux/musl/b32/x86/mod.rs
++++ b/src/unix/linux_like/linux/musl/b32/x86/mod.rs
+@@ -59,6 +59,14 @@ s! {
+     }
+ 
+     pub struct ipc_perm {
++        #[cfg(musl_v1_2_3)]
++        pub __key: crate::key_t,
++        #[cfg(not(musl_v1_2_3))]
++        #[deprecated(
++            since = "0.2.173",
++            note = "This field is incorrectly named and will be changed
++                to __key in a future release."
++        )]
+         pub __ipc_perm_key: crate::key_t,
+         pub uid: crate::uid_t,
+         pub gid: crate::gid_t,
+diff --git a/src/unix/linux_like/linux/musl/b64/aarch64/mod.rs b/src/unix/linux_like/linux/musl/b64/aarch64/mod.rs
+index e84b9f563..aca96f2ec 100644
+--- a/src/unix/linux_like/linux/musl/b64/aarch64/mod.rs
++++ b/src/unix/linux_like/linux/musl/b64/aarch64/mod.rs
+@@ -60,6 +60,14 @@ s! {
+     }
+ 
+     pub struct ipc_perm {
++        #[cfg(musl_v1_2_3)]
++        pub __key: crate::key_t,
++        #[cfg(not(musl_v1_2_3))]
++        #[deprecated(
++            since = "0.2.173",
++            note = "This field is incorrectly named and will be changed
++                to __key in a future release."
++        )]
+         pub __ipc_perm_key: crate::key_t,
+         pub uid: crate::uid_t,
+         pub gid: crate::gid_t,
+diff --git a/src/unix/linux_like/linux/musl/b64/mips64.rs b/src/unix/linux_like/linux/musl/b64/mips64.rs
+index 33afe4e46..5cef57239 100644
+--- a/src/unix/linux_like/linux/musl/b64/mips64.rs
++++ b/src/unix/linux_like/linux/musl/b64/mips64.rs
+@@ -57,6 +57,14 @@ s! {
+     }
+ 
+     pub struct ipc_perm {
++        #[cfg(musl_v1_2_3)]
++        pub __key: crate::key_t,
++        #[cfg(not(musl_v1_2_3))]
++        #[deprecated(
++            since = "0.2.173",
++            note = "This field is incorrectly named and will be changed
++                to __key in a future release."
++        )]
+         pub __ipc_perm_key: crate::key_t,
+         pub uid: crate::uid_t,
+         pub gid: crate::gid_t,
+diff --git a/src/unix/linux_like/linux/musl/b64/powerpc64.rs b/src/unix/linux_like/linux/musl/b64/powerpc64.rs
+index fb9653bc8..4f3c081fb 100644
+--- a/src/unix/linux_like/linux/musl/b64/powerpc64.rs
++++ b/src/unix/linux_like/linux/musl/b64/powerpc64.rs
+@@ -51,6 +51,14 @@ s! {
+     }
+ 
+     pub struct ipc_perm {
++        #[cfg(musl_v1_2_3)]
++        pub __key: crate::key_t,
++        #[cfg(not(musl_v1_2_3))]
++        #[deprecated(
++            since = "0.2.173",
++            note = "This field is incorrectly named and will be changed
++                to __key in a future release."
++        )]
+         pub __ipc_perm_key: crate::key_t,
+         pub uid: crate::uid_t,
+         pub gid: crate::gid_t,
+diff --git a/src/unix/linux_like/linux/musl/b64/s390x.rs b/src/unix/linux_like/linux/musl/b64/s390x.rs
+index 8a274f39d..fe9f798d0 100644
+--- a/src/unix/linux_like/linux/musl/b64/s390x.rs
++++ b/src/unix/linux_like/linux/musl/b64/s390x.rs
+@@ -10,6 +10,14 @@ pub type __s64 = i64;
+ 
+ s! {
+     pub struct ipc_perm {
++        #[cfg(musl_v1_2_3)]
++        pub __key: crate::key_t,
++        #[cfg(not(musl_v1_2_3))]
++        #[deprecated(
++            since = "0.2.173",
++            note = "This field is incorrectly named and will be changed
++                to __key in a future release."
++        )]
+         pub __ipc_perm_key: crate::key_t,
+         pub uid: crate::uid_t,
+         pub gid: crate::gid_t,
+diff --git a/src/unix/linux_like/linux/musl/b64/wasm32/mod.rs b/src/unix/linux_like/linux/musl/b64/wasm32/mod.rs
+index 3ac15b8a9..3f7a60982 100644
+--- a/src/unix/linux_like/linux/musl/b64/wasm32/mod.rs
++++ b/src/unix/linux_like/linux/musl/b64/wasm32/mod.rs
+@@ -53,6 +53,14 @@ s! {
+     }
+ 
+     pub struct ipc_perm {
++        #[cfg(musl_v1_2_3)]
++        pub __key: crate::key_t,
++        #[cfg(not(musl_v1_2_3))]
++        #[deprecated(
++            since = "0.2.173",
++            note = "This field is incorrectly named and will be changed
++                to __key in a future release."
++        )]
+         pub __ipc_perm_key: crate::key_t,
+         pub uid: crate::uid_t,
+         pub gid: crate::gid_t,
+diff --git a/src/unix/linux_like/linux/musl/b64/x86_64/mod.rs b/src/unix/linux_like/linux/musl/b64/x86_64/mod.rs
+index a8070cb97..c02744c51 100644
+--- a/src/unix/linux_like/linux/musl/b64/x86_64/mod.rs
++++ b/src/unix/linux_like/linux/musl/b64/x86_64/mod.rs
+@@ -112,6 +112,14 @@ s! {
+     }
+ 
+     pub struct ipc_perm {
++        #[cfg(musl_v1_2_3)]
++        pub __key: crate::key_t,
++        #[cfg(not(musl_v1_2_3))]
++        #[deprecated(
++            since = "0.2.173",
++            note = "This field is incorrectly named and will be changed
++                to __key in a future release."
++        )]
+         pub __ipc_perm_key: crate::key_t,
+         pub uid: crate::uid_t,
+         pub gid: crate::gid_t,
+-- 
+2.43.0
+

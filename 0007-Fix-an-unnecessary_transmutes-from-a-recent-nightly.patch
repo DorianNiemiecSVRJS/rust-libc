@@ -1,0 +1,41 @@
+From 5f922548540bfef89e2cc7068e60ce32ad634d06 Mon Sep 17 00:00:00 2001
+From: Trevor Gross <tmgross@umich.edu>
+Date: Fri, 25 Apr 2025 03:40:53 +0000
+Subject: [PATCH 07/80] Fix an `unnecessary_transmutes` from a recent nightly
+
+(backport <https://github.com/rust-lang/libc/pull/4429>)
+(cherry picked from commit 673af93ebd3f3b830f2d1a76eb10d622b7731d83)
+---
+ src/unix/linux_like/linux/gnu/b64/s390x.rs  | 2 +-
+ src/unix/linux_like/linux/musl/b64/s390x.rs | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/unix/linux_like/linux/gnu/b64/s390x.rs b/src/unix/linux_like/linux/gnu/b64/s390x.rs
+index c08e12108..18684de36 100644
+--- a/src/unix/linux_like/linux/gnu/b64/s390x.rs
++++ b/src/unix/linux_like/linux/gnu/b64/s390x.rs
+@@ -235,7 +235,7 @@ cfg_if! {
+ 
+         impl hash::Hash for fpreg_t {
+             fn hash<H: hash::Hasher>(&self, state: &mut H) {
+-                let d: u64 = unsafe { mem::transmute(self.d) };
++                let d: u64 = self.d.to_bits();
+                 d.hash(state);
+             }
+         }
+diff --git a/src/unix/linux_like/linux/musl/b64/s390x.rs b/src/unix/linux_like/linux/musl/b64/s390x.rs
+index b992a2c43..8a274f39d 100644
+--- a/src/unix/linux_like/linux/musl/b64/s390x.rs
++++ b/src/unix/linux_like/linux/musl/b64/s390x.rs
+@@ -88,7 +88,7 @@ cfg_if! {
+ 
+         impl hash::Hash for fpreg_t {
+             fn hash<H: hash::Hasher>(&self, state: &mut H) {
+-                let d: u64 = unsafe { mem::transmute(self.d) };
++                let d: u64 = self.d.to_bits();
+                 d.hash(state);
+             }
+         }
+-- 
+2.43.0
+

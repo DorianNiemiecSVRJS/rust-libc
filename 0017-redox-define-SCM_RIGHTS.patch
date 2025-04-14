@@ -1,0 +1,39 @@
+From 6cec0fad829f2c575eb0c982a878615680cea523 Mon Sep 17 00:00:00 2001
+From: Jeremy Soller <jackpot51@gmail.com>
+Date: Fri, 2 May 2025 08:52:21 -0600
+Subject: [PATCH 17/80] redox: define SCM_RIGHTS
+
+(backport <https://github.com/rust-lang/libc/pull/4440>)
+(cherry picked from commit 74bfdee3ee011f2da1f91e7d056616b1eab0f8a4)
+---
+ libc-test/semver/redox.txt | 1 +
+ src/unix/redox/mod.rs      | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/libc-test/semver/redox.txt b/libc-test/semver/redox.txt
+index 8e7403982..3c3c52eab 100644
+--- a/libc-test/semver/redox.txt
++++ b/libc-test/semver/redox.txt
+@@ -135,6 +135,7 @@ O_SHLOCK
+ O_SYMLINK
+ PTHREAD_STACK_MIN
+ SA_RESTORER
++SCM_RIGHTS
+ SIGIO
+ SIGPWR
+ SIGSTKFLT
+diff --git a/src/unix/redox/mod.rs b/src/unix/redox/mod.rs
+index c21c156f4..d9900d1cb 100644
+--- a/src/unix/redox/mod.rs
++++ b/src/unix/redox/mod.rs
+@@ -782,6 +782,7 @@ pub const MSG_PEEK: c_int = 2;
+ pub const MSG_TRUNC: c_int = 32;
+ pub const MSG_DONTWAIT: c_int = 64;
+ pub const MSG_WAITALL: c_int = 256;
++pub const SCM_RIGHTS: c_int = 1;
+ pub const SHUT_RD: c_int = 0;
+ pub const SHUT_WR: c_int = 1;
+ pub const SHUT_RDWR: c_int = 2;
+-- 
+2.43.0
+

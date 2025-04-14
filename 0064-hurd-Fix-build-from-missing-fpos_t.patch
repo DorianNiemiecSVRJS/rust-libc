@@ -1,0 +1,36 @@
+From 9810e4b6df50642a74b71758c94754d65cfad09e Mon Sep 17 00:00:00 2001
+From: Trevor Gross <tmgross@umich.edu>
+Date: Mon, 2 Jun 2025 05:37:38 +0000
+Subject: [PATCH 64/80] hurd: Fix build from missing `fpos_t`
+
+In 872642ad ("gnu: Add proper structs for fpos_t and fpos64_t"),
+`fpos_t` was changed from an opaque struct to one with a definition on
+Linux GNU, with the Unix fallback configured as for targets without a
+GNU `target_env`. However, GNU hurd matches `target_env = "gnu"`, but
+doesn't have a `fpos` implementation.
+
+Fix the build by adjusting the fallback `cfg` to be more specific.
+Eventually we probably want the same definition on Hurd as on Linux.
+
+(backport <https://github.com/rust-lang/libc/pull/4472>)
+(cherry picked from commit 72f49c99656e70eb70e20b444f3be85f3302f306)
+---
+ src/unix/mod.rs | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/unix/mod.rs b/src/unix/mod.rs
+index 78331310c..96209e7e7 100644
+--- a/src/unix/mod.rs
++++ b/src/unix/mod.rs
+@@ -567,7 +567,7 @@ cfg_if! {
+ }
+ 
+ cfg_if! {
+-    if #[cfg(not(target_env = "gnu"))] {
++    if #[cfg(not(all(target_os = "linux", target_env = "gnu")))] {
+         missing! {
+             #[cfg_attr(feature = "extra_traits", derive(Debug))]
+             pub enum fpos_t {} // FIXME(unix): fill this out with a struct
+-- 
+2.43.0
+

@@ -1,0 +1,109 @@
+From 00c199937c0c7600d7d425a67d9b30b38ac3d2cc Mon Sep 17 00:00:00 2001
+From: Bben01 <52465698+Bben01@users.noreply.github.com>
+Date: Wed, 30 Apr 2025 10:29:29 +0300
+Subject: [PATCH 48/80] Add constants from linux/cn_proc.h and
+ linux/connector.h
+
+(backport <https://github.com/rust-lang/libc/pull/4434>)
+(cherry picked from commit abd00f80b61fa48e394fb600f95fee63c78c6537)
+---
+ ci/style.sh                      |  2 +-
+ libc-test/build.rs               |  5 ++++
+ src/unix/linux_like/linux/mod.rs | 45 ++++++++++++++++++++++++++++++++
+ 3 files changed, 51 insertions(+), 1 deletion(-)
+
+diff --git a/ci/style.sh b/ci/style.sh
+index 0d4a4f953..97a9bc47b 100755
+--- a/ci/style.sh
++++ b/ci/style.sh
+@@ -26,7 +26,7 @@ while IFS= read -r file; do
+ 
+     # Turn all braced macro `foo! { /* ... */ }` invocations into
+     # `fn foo_fmt_tmp() { /* ... */ }`.
+-    perl -pi -e 's/(?!macro_rules)\b(\w+)!\s*\{/fn $1_fmt_tmp() {/g' "$file"
++    perl -pi -e 's/(?!macro_rules|c_enum)\b(\w+)!\s*\{/fn $1_fmt_tmp() {/g' "$file"
+ 
+     # Replace `if #[cfg(...)]` within `cfg_if` with `if cfg_tmp!([...])` which
+     # `rustfmt` will format. We put brackets within the parens so it is easy to
+diff --git a/libc-test/build.rs b/libc-test/build.rs
+index a7752f0b3..4815715a5 100644
+--- a/libc-test/build.rs
++++ b/libc-test/build.rs
+@@ -3879,6 +3879,8 @@ fn test_linux(target: &str) {
+             "linux/can.h",
+             "linux/can/raw.h",
+             "linux/can/j1939.h",
++            "linux/cn_proc.h",
++            "linux/connector.h",
+             "linux/dccp.h",
+             "linux/errqueue.h",
+             "linux/falloc.h",
+@@ -4699,6 +4701,9 @@ fn test_linux(target: &str) {
+             // FIXME(linux): Requires >= 6.4 kernel headers.
+             "PTRACE_SET_SYSCALL_USER_DISPATCH_CONFIG" | "PTRACE_GET_SYSCALL_USER_DISPATCH_CONFIG" => true,
+ 
++            // FIXME(linux): Requires >= 6.6 kernel headers.
++            "PROC_EVENT_NONZERO_EXIT" => true,
++
+             _ => false,
+         }
+     });
+diff --git a/src/unix/linux_like/linux/mod.rs b/src/unix/linux_like/linux/mod.rs
+index 021611af5..bfae5592a 100644
+--- a/src/unix/linux_like/linux/mod.rs
++++ b/src/unix/linux_like/linux/mod.rs
+@@ -4734,6 +4734,51 @@ pub const RTNLGRP_MCTP_IFADDR: c_uint = 0x22;
+ pub const RTNLGRP_TUNNEL: c_uint = 0x23;
+ pub const RTNLGRP_STATS: c_uint = 0x24;
+ 
++// linux/cn_proc.h
++c_enum! {
++    proc_cn_mcast_op {
++        PROC_CN_MCAST_LISTEN = 1,
++        PROC_CN_MCAST_IGNORE = 2,
++    }
++}
++
++c_enum! {
++    proc_cn_event {
++        PROC_EVENT_NONE = 0x00000000,
++        PROC_EVENT_FORK = 0x00000001,
++        PROC_EVENT_EXEC = 0x00000002,
++        PROC_EVENT_UID = 0x00000004,
++        PROC_EVENT_GID = 0x00000040,
++        PROC_EVENT_SID = 0x00000080,
++        PROC_EVENT_PTRACE = 0x00000100,
++        PROC_EVENT_COMM = 0x00000200,
++        PROC_EVENT_NONZERO_EXIT = 0x20000000,
++        PROC_EVENT_COREDUMP = 0x40000000,
++        PROC_EVENT_EXIT = 0x80000000,
++    }
++}
++
++// linux/connector.h
++pub const CN_IDX_PROC: c_uint = 0x1;
++pub const CN_VAL_PROC: c_uint = 0x1;
++pub const CN_IDX_CIFS: c_uint = 0x2;
++pub const CN_VAL_CIFS: c_uint = 0x1;
++pub const CN_W1_IDX: c_uint = 0x3;
++pub const CN_W1_VAL: c_uint = 0x1;
++pub const CN_IDX_V86D: c_uint = 0x4;
++pub const CN_VAL_V86D_UVESAFB: c_uint = 0x1;
++pub const CN_IDX_BB: c_uint = 0x5;
++pub const CN_DST_IDX: c_uint = 0x6;
++pub const CN_DST_VAL: c_uint = 0x1;
++pub const CN_IDX_DM: c_uint = 0x7;
++pub const CN_VAL_DM_USERSPACE_LOG: c_uint = 0x1;
++pub const CN_IDX_DRBD: c_uint = 0x8;
++pub const CN_VAL_DRBD: c_uint = 0x1;
++pub const CN_KVP_IDX: c_uint = 0x9;
++pub const CN_KVP_VAL: c_uint = 0x1;
++pub const CN_VSS_IDX: c_uint = 0xA;
++pub const CN_VSS_VAL: c_uint = 0x1;
++
+ // linux/module.h
+ pub const MODULE_INIT_IGNORE_MODVERSIONS: c_uint = 0x0001;
+ pub const MODULE_INIT_IGNORE_VERMAGIC: c_uint = 0x0002;
+-- 
+2.43.0
+

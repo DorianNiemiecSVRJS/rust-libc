@@ -1,0 +1,62 @@
+From ab9cd3c5b93a70b7ed072786b2025d0337058eeb Mon Sep 17 00:00:00 2001
+From: David Carlier <devnexen@gmail.com>
+Date: Sun, 13 Apr 2025 08:56:34 +0100
+Subject: [PATCH 06/80] adding pid_type enum values for Linux.
+
+[ref](https://github.com/torvalds/linux/blob/7cdabafc001202de9984f22c973305f424e0a8b7/include/linux/pid_types.h#L5)
+
+(backport <https://github.com/rust-lang/libc/pull/4403>)
+(cherry picked from commit e79c8d90c8e746043d1da4828843e151329e3faf)
+---
+ libc-test/semver/linux.txt       |  6 ++++++
+ src/unix/linux_like/linux/mod.rs | 10 ++++++++++
+ 2 files changed, 16 insertions(+)
+
+diff --git a/libc-test/semver/linux.txt b/libc-test/semver/linux.txt
+index 9bf5ec61c..92c0f64fb 100644
+--- a/libc-test/semver/linux.txt
++++ b/libc-test/semver/linux.txt
+@@ -2171,6 +2171,11 @@ PF_WANPIPE
+ PF_WQ_WORKER
+ PF_X
+ PF_X25
++PIDTYPE_MAX
++PIDTYPE_PGID
++PIDTYPE_PID
++PIDTYPE_SID
++PIDTYPE_TGID
+ PIPE_BUF
+ PM_STR
+ POLLRDBAND
+@@ -4038,6 +4043,7 @@ packet_mreq
+ pause
+ personality
+ pgn_t
++pid_type
+ pipe2
+ popen
+ posix_fadvise
+diff --git a/src/unix/linux_like/linux/mod.rs b/src/unix/linux_like/linux/mod.rs
+index 59857ff12..5f4f219cb 100644
+--- a/src/unix/linux_like/linux/mod.rs
++++ b/src/unix/linux_like/linux/mod.rs
+@@ -93,6 +93,16 @@ e! {
+     }
+ }
+ 
++c_enum! {
++    pid_type {
++        PIDTYPE_PID,
++        PIDTYPE_TGID,
++        PIDTYPE_PGID,
++        PIDTYPE_SID,
++        PIDTYPE_MAX,
++    }
++}
++
+ s! {
+     pub struct glob_t {
+         pub gl_pathc: size_t,
+-- 
+2.43.0
+

@@ -1,0 +1,33 @@
+From 3ddb15525becff07d52abf0e2fb634631b756cb5 Mon Sep 17 00:00:00 2001
+From: Trevor Gross <tmgross@umich.edu>
+Date: Sun, 27 Apr 2025 16:58:44 +0000
+Subject: [PATCH 13/80] Remove triagebot assignment
+
+It's only me and I watch the repo anyway, so save me some unneeded
+pings.
+
+(backport <https://github.com/rust-lang/libc/pull/4432>)
+(cherry picked from commit 004030904ae36e656788b14e295d263b1946d568)
+---
+ triagebot.toml | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/triagebot.toml b/triagebot.toml
+index 529367107..fe3a00af5 100644
+--- a/triagebot.toml
++++ b/triagebot.toml
+@@ -11,11 +11,6 @@ allow-unauthenticated = [
+ warn_non_default_branch.enable = true
+ contributing_url = "https://github.com/rust-lang/libc/blob/HEAD/CONTRIBUTING.md"
+ 
+-[assign.owners]
+-"*" = [
+-    "@tgross35",
+-]
+-
+ # Ensure issue links link to this repo
+ [issue-links]
+ 
+-- 
+2.43.0
+

@@ -1,0 +1,39 @@
+From d392ce79ae083a6c75064cfa3d97a3e8c8e51639 Mon Sep 17 00:00:00 2001
+From: Ryan Castellucci <code@ryanc.org>
+Date: Tue, 11 Mar 2025 08:33:53 +0000
+Subject: [PATCH 08/80] linux: add constant PACKET_IGNORE_OUTGOING
+
+(backport <https://github.com/rust-lang/libc/pull/4319>)
+(cherry picked from commit 29ab31e2cacdcb12e8151b15daf7dc65ef195d59)
+---
+ libc-test/semver/linux.txt       | 1 +
+ src/unix/linux_like/linux/mod.rs | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/libc-test/semver/linux.txt b/libc-test/semver/linux.txt
+index 92c0f64fb..962c4363e 100644
+--- a/libc-test/semver/linux.txt
++++ b/libc-test/semver/linux.txt
+@@ -2084,6 +2084,7 @@ PACKET_FANOUT_QM
+ PACKET_FANOUT_RND
+ PACKET_FANOUT_ROLLOVER
+ PACKET_HOST
++PACKET_IGNORE_OUTGOING
+ PACKET_KERNEL
+ PACKET_LOOPBACK
+ PACKET_LOSS
+diff --git a/src/unix/linux_like/linux/mod.rs b/src/unix/linux_like/linux/mod.rs
+index 5f4f219cb..ade7311d7 100644
+--- a/src/unix/linux_like/linux/mod.rs
++++ b/src/unix/linux_like/linux/mod.rs
+@@ -3840,6 +3840,7 @@ pub const PACKET_LOSS: c_int = 14;
+ pub const PACKET_TIMESTAMP: c_int = 17;
+ pub const PACKET_FANOUT: c_int = 18;
+ pub const PACKET_QDISC_BYPASS: c_int = 20;
++pub const PACKET_IGNORE_OUTGOING: c_int = 23;
+ 
+ pub const PACKET_FANOUT_HASH: c_uint = 0;
+ pub const PACKET_FANOUT_LB: c_uint = 1;
+-- 
+2.43.0
+

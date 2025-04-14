@@ -1,0 +1,57 @@
+From 1e99d50bc98ec6387efef17f9f44e978202bf083 Mon Sep 17 00:00:00 2001
+From: The 8472 <git@infinite-source.de>
+Date: Sat, 14 Jun 2025 15:44:10 +0200
+Subject: [PATCH 76/80] make pidfd_info fields pub
+
+the struct appers to be extensible, so also mark it as non_exhaustive
+
+(backport <https://github.com/rust-lang/libc/pull/4487>)
+(cherry picked from commit 4dc50ebfd4750a5b7459482aa2618387a0bdbb7f)
+---
+ src/unix/linux_like/linux/mod.rs | 29 +++++++++++++++--------------
+ 1 file changed, 15 insertions(+), 14 deletions(-)
+
+diff --git a/src/unix/linux_like/linux/mod.rs b/src/unix/linux_like/linux/mod.rs
+index 9439ce257..992df6cff 100644
+--- a/src/unix/linux_like/linux/mod.rs
++++ b/src/unix/linux_like/linux/mod.rs
+@@ -1366,21 +1366,22 @@ s! {
+ 
+     // linux/pidfd.h
+ 
++    #[non_exhaustive]
+     pub struct pidfd_info {
+-        mask: crate::__u64,
+-        cgroupid: crate::__u64,
+-        pid: crate::__u32,
+-        tgid: crate::__u32,
+-        ppid: crate::__u32,
+-        ruid: crate::__u32,
+-        rgid: crate::__u32,
+-        euid: crate::__u32,
+-        egid: crate::__u32,
+-        suid: crate::__u32,
+-        sgid: crate::__u32,
+-        fsuid: crate::__u32,
+-        fsgid: crate::__u32,
+-        exit_code: crate::__s32,
++        pub mask: crate::__u64,
++        pub cgroupid: crate::__u64,
++        pub pid: crate::__u32,
++        pub tgid: crate::__u32,
++        pub ppid: crate::__u32,
++        pub ruid: crate::__u32,
++        pub rgid: crate::__u32,
++        pub euid: crate::__u32,
++        pub egid: crate::__u32,
++        pub suid: crate::__u32,
++        pub sgid: crate::__u32,
++        pub fsuid: crate::__u32,
++        pub fsgid: crate::__u32,
++        pub exit_code: crate::__s32,
+     }
+ 
+     // linux/uio.h
+-- 
+2.43.0
+

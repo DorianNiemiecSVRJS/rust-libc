@@ -1,0 +1,61 @@
+From b553d1f7e643f9830158d6a66b5647ee3fa4fa85 Mon Sep 17 00:00:00 2001
+From: Reagan Bohan <xbjfk.github@gmail.com>
+Date: Sat, 3 May 2025 10:21:09 +0000
+Subject: [PATCH 31/80] musl: Fix O_LARGEFILE constant value.
+
+This was accidentally set to 0 in upstream, but fixed in commit b8b729b.
+If running with prior versions without that commit, this commit
+effectively backports it.
+
+(backport <https://github.com/rust-lang/libc/pull/4443>)
+(cherry picked from commit 686aa7a3a2ead357a732d018e4295c9a92312132)
+---
+ libc-test/build.rs                                | 4 ++++
+ src/unix/linux_like/linux/musl/b64/riscv64/mod.rs | 2 +-
+ src/unix/linux_like/linux/musl/b64/x86_64/mod.rs  | 2 +-
+ 3 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/libc-test/build.rs b/libc-test/build.rs
+index cf432fd19..71758f464 100644
+--- a/libc-test/build.rs
++++ b/libc-test/build.rs
+@@ -4329,6 +4329,10 @@ fn test_linux(target: &str) {
+             {
+                         return true;
+             }
++            // Values changed in newer musl versions on these arches
++            if old_musl && (riscv64 || x86_64) && name == "O_LARGEFILE" {
++                return true;
++            }
+         }
+         match name {
+             // These constants are not available if gnu headers have been included
+diff --git a/src/unix/linux_like/linux/musl/b64/riscv64/mod.rs b/src/unix/linux_like/linux/musl/b64/riscv64/mod.rs
+index 115ec076f..cf851c466 100644
+--- a/src/unix/linux_like/linux/musl/b64/riscv64/mod.rs
++++ b/src/unix/linux_like/linux/musl/b64/riscv64/mod.rs
+@@ -432,7 +432,7 @@ pub const SYS_landlock_restrict_self: c_long = 446;
+ pub const O_APPEND: c_int = 1024;
+ pub const O_DIRECT: c_int = 0x4000;
+ pub const O_DIRECTORY: c_int = 0x10000;
+-pub const O_LARGEFILE: c_int = 0;
++pub const O_LARGEFILE: c_int = 0o100000;
+ pub const O_NOFOLLOW: c_int = 0x20000;
+ pub const O_CREAT: c_int = 64;
+ pub const O_EXCL: c_int = 128;
+diff --git a/src/unix/linux_like/linux/musl/b64/x86_64/mod.rs b/src/unix/linux_like/linux/musl/b64/x86_64/mod.rs
+index b44b54de6..a8070cb97 100644
+--- a/src/unix/linux_like/linux/musl/b64/x86_64/mod.rs
++++ b/src/unix/linux_like/linux/musl/b64/x86_64/mod.rs
+@@ -701,7 +701,7 @@ pub const MAP_32BIT: c_int = 0x0040;
+ pub const O_APPEND: c_int = 1024;
+ pub const O_DIRECT: c_int = 0x4000;
+ pub const O_DIRECTORY: c_int = 0x10000;
+-pub const O_LARGEFILE: c_int = 0;
++pub const O_LARGEFILE: c_int = 0o0100000;
+ pub const O_NOFOLLOW: c_int = 0x20000;
+ pub const O_CREAT: c_int = 64;
+ pub const O_EXCL: c_int = 128;
+-- 
+2.43.0
+

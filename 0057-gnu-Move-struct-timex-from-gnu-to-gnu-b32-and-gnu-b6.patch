@@ -1,0 +1,243 @@
+From 516e529eb392036e2bc02eb5ae1343db2261ab98 Mon Sep 17 00:00:00 2001
+From: Ola x Nilsson <olani@axis.com>
+Date: Tue, 25 Mar 2025 17:19:38 +0100
+Subject: [PATCH 57/80] gnu: Move struct timex from gnu to gnu/b32 and gnu/b64
+
+Will make it easier to adapt for _TIME_BITS=64
+
+(backport <https://github.com/rust-lang/libc/pull/4433>)
+(cherry picked from commit 87d9e201c3feb62e58f6ede10637ecc45db2f7b4)
+---
+ src/unix/linux_like/linux/gnu/b32/mod.rs | 34 ++++++++++
+ src/unix/linux_like/linux/gnu/b64/mod.rs | 79 ++++++++++++++++++++++++
+ src/unix/linux_like/linux/gnu/mod.rs     | 79 ------------------------
+ 3 files changed, 113 insertions(+), 79 deletions(-)
+
+diff --git a/src/unix/linux_like/linux/gnu/b32/mod.rs b/src/unix/linux_like/linux/gnu/b32/mod.rs
+index 56bc9c01b..5d2897a2b 100644
+--- a/src/unix/linux_like/linux/gnu/b32/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/mod.rs
+@@ -201,6 +201,40 @@ s! {
+         __glibc_reserved3: crate::__syscall_ulong_t,
+         __glibc_reserved4: crate::__syscall_ulong_t,
+     }
++
++    pub struct timex {
++        pub modes: c_uint,
++        pub offset: c_long,
++        pub freq: c_long,
++        pub maxerror: c_long,
++        pub esterror: c_long,
++        pub status: c_int,
++        pub constant: c_long,
++        pub precision: c_long,
++        pub tolerance: c_long,
++        pub time: crate::timeval,
++        pub tick: c_long,
++        pub ppsfreq: c_long,
++        pub jitter: c_long,
++        pub shift: c_int,
++        pub stabil: c_long,
++        pub jitcnt: c_long,
++        pub calcnt: c_long,
++        pub errcnt: c_long,
++        pub stbcnt: c_long,
++        pub tai: c_int,
++        pub __unused1: i32,
++        pub __unused2: i32,
++        pub __unused3: i32,
++        pub __unused4: i32,
++        pub __unused5: i32,
++        pub __unused6: i32,
++        pub __unused7: i32,
++        pub __unused8: i32,
++        pub __unused9: i32,
++        pub __unused10: i32,
++        pub __unused11: i32,
++    }
+ }
+ 
+ pub const POSIX_FADV_DONTNEED: c_int = 4;
+diff --git a/src/unix/linux_like/linux/gnu/b64/mod.rs b/src/unix/linux_like/linux/gnu/b64/mod.rs
+index 5927e6c99..ba5678b45 100644
+--- a/src/unix/linux_like/linux/gnu/b64/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b64/mod.rs
+@@ -97,6 +97,85 @@ s! {
+         __glibc_reserved3: crate::__syscall_ulong_t,
+         __glibc_reserved4: crate::__syscall_ulong_t,
+     }
++
++    pub struct timex {
++        pub modes: c_uint,
++        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
++        pub offset: i64,
++        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
++        pub offset: c_long,
++        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
++        pub freq: i64,
++        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
++        pub freq: c_long,
++        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
++        pub maxerror: i64,
++        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
++        pub maxerror: c_long,
++        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
++        pub esterror: i64,
++        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
++        pub esterror: c_long,
++        pub status: c_int,
++        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
++        pub constant: i64,
++        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
++        pub constant: c_long,
++        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
++        pub precision: i64,
++        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
++        pub precision: c_long,
++        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
++        pub tolerance: i64,
++        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
++        pub tolerance: c_long,
++        pub time: crate::timeval,
++        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
++        pub tick: i64,
++        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
++        pub tick: c_long,
++        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
++        pub ppsfreq: i64,
++        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
++        pub ppsfreq: c_long,
++        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
++        pub jitter: i64,
++        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
++        pub jitter: c_long,
++        pub shift: c_int,
++        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
++        pub stabil: i64,
++        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
++        pub stabil: c_long,
++        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
++        pub jitcnt: i64,
++        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
++        pub jitcnt: c_long,
++        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
++        pub calcnt: i64,
++        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
++        pub calcnt: c_long,
++        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
++        pub errcnt: i64,
++        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
++        pub errcnt: c_long,
++        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
++        pub stbcnt: i64,
++        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
++        pub stbcnt: c_long,
++        pub tai: c_int,
++        pub __unused1: i32,
++        pub __unused2: i32,
++        pub __unused3: i32,
++        pub __unused4: i32,
++        pub __unused5: i32,
++        pub __unused6: i32,
++        pub __unused7: i32,
++        pub __unused8: i32,
++        pub __unused9: i32,
++        pub __unused10: i32,
++        pub __unused11: i32,
++    }
+ }
+ 
+ pub const __SIZEOF_PTHREAD_RWLOCKATTR_T: usize = 8;
+diff --git a/src/unix/linux_like/linux/gnu/mod.rs b/src/unix/linux_like/linux/gnu/mod.rs
+index 0c5a74b34..3533e388f 100644
+--- a/src/unix/linux_like/linux/gnu/mod.rs
++++ b/src/unix/linux_like/linux/gnu/mod.rs
+@@ -174,85 +174,6 @@ s! {
+         pub rt_irtt: c_ushort,
+     }
+ 
+-    pub struct timex {
+-        pub modes: c_uint,
+-        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+-        pub offset: i64,
+-        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+-        pub offset: c_long,
+-        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+-        pub freq: i64,
+-        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+-        pub freq: c_long,
+-        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+-        pub maxerror: i64,
+-        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+-        pub maxerror: c_long,
+-        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+-        pub esterror: i64,
+-        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+-        pub esterror: c_long,
+-        pub status: c_int,
+-        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+-        pub constant: i64,
+-        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+-        pub constant: c_long,
+-        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+-        pub precision: i64,
+-        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+-        pub precision: c_long,
+-        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+-        pub tolerance: i64,
+-        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+-        pub tolerance: c_long,
+-        pub time: crate::timeval,
+-        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+-        pub tick: i64,
+-        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+-        pub tick: c_long,
+-        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+-        pub ppsfreq: i64,
+-        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+-        pub ppsfreq: c_long,
+-        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+-        pub jitter: i64,
+-        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+-        pub jitter: c_long,
+-        pub shift: c_int,
+-        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+-        pub stabil: i64,
+-        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+-        pub stabil: c_long,
+-        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+-        pub jitcnt: i64,
+-        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+-        pub jitcnt: c_long,
+-        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+-        pub calcnt: i64,
+-        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+-        pub calcnt: c_long,
+-        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+-        pub errcnt: i64,
+-        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+-        pub errcnt: c_long,
+-        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+-        pub stbcnt: i64,
+-        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+-        pub stbcnt: c_long,
+-        pub tai: c_int,
+-        pub __unused1: i32,
+-        pub __unused2: i32,
+-        pub __unused3: i32,
+-        pub __unused4: i32,
+-        pub __unused5: i32,
+-        pub __unused6: i32,
+-        pub __unused7: i32,
+-        pub __unused8: i32,
+-        pub __unused9: i32,
+-        pub __unused10: i32,
+-        pub __unused11: i32,
+-    }
+-
+     pub struct ntptimeval {
+         pub time: crate::timeval,
+         pub maxerror: c_long,
+-- 
+2.43.0
+

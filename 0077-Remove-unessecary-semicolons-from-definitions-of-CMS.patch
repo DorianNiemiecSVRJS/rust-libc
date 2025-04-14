@@ -1,0 +1,112 @@
+From 790180ba16a40ab648fb7317ba39aff8f1a21ad9 Mon Sep 17 00:00:00 2001
+From: Collin Funk <collin.funk1@gmail.com>
+Date: Sun, 15 Jun 2025 19:18:39 -0700
+Subject: [PATCH 77/80] Remove unessecary semicolons from definitions of
+ `CMSG_NXTHDR`.
+
+(backport <https://github.com/rust-lang/libc/pull/4492>)
+(cherry picked from commit a2cf7c82ed85530e6262b0bc4d6f14bcda91777f)
+---
+ src/unix/bsd/freebsdlike/freebsd/mod.rs | 2 +-
+ src/unix/bsd/netbsdlike/netbsd/mod.rs   | 2 +-
+ src/unix/bsd/netbsdlike/openbsd/mod.rs  | 2 +-
+ src/unix/haiku/mod.rs                   | 2 +-
+ src/unix/hurd/mod.rs                    | 2 +-
+ src/unix/linux_like/emscripten/mod.rs   | 2 +-
+ src/unix/solarish/mod.rs                | 2 +-
+ 7 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/src/unix/bsd/freebsdlike/freebsd/mod.rs b/src/unix/bsd/freebsdlike/freebsd/mod.rs
+index bd4601576..de41a7c6d 100644
+--- a/src/unix/bsd/freebsdlike/freebsd/mod.rs
++++ b/src/unix/bsd/freebsdlike/freebsd/mod.rs
+@@ -4662,7 +4662,7 @@ f! {
+     pub fn CMSG_NXTHDR(mhdr: *const crate::msghdr, cmsg: *const cmsghdr) -> *mut cmsghdr {
+         if cmsg.is_null() {
+             return crate::CMSG_FIRSTHDR(mhdr);
+-        };
++        }
+         let next =
+             cmsg as usize + _ALIGN((*cmsg).cmsg_len as usize) + _ALIGN(mem::size_of::<cmsghdr>());
+         let max = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
+diff --git a/src/unix/bsd/netbsdlike/netbsd/mod.rs b/src/unix/bsd/netbsdlike/netbsd/mod.rs
+index 3addd5a8a..7bcb55ac2 100644
+--- a/src/unix/bsd/netbsdlike/netbsd/mod.rs
++++ b/src/unix/bsd/netbsdlike/netbsd/mod.rs
+@@ -2295,7 +2295,7 @@ f! {
+     pub fn CMSG_NXTHDR(mhdr: *const crate::msghdr, cmsg: *const cmsghdr) -> *mut cmsghdr {
+         if cmsg.is_null() {
+             return crate::CMSG_FIRSTHDR(mhdr);
+-        };
++        }
+         let next =
+             cmsg as usize + _ALIGN((*cmsg).cmsg_len as usize) + _ALIGN(mem::size_of::<cmsghdr>());
+         let max = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
+diff --git a/src/unix/bsd/netbsdlike/openbsd/mod.rs b/src/unix/bsd/netbsdlike/openbsd/mod.rs
+index 621b4038d..d0bb4bada 100644
+--- a/src/unix/bsd/netbsdlike/openbsd/mod.rs
++++ b/src/unix/bsd/netbsdlike/openbsd/mod.rs
+@@ -1869,7 +1869,7 @@ f! {
+     pub fn CMSG_NXTHDR(mhdr: *const crate::msghdr, cmsg: *const cmsghdr) -> *mut cmsghdr {
+         if cmsg.is_null() {
+             return crate::CMSG_FIRSTHDR(mhdr);
+-        };
++        }
+         let next =
+             cmsg as usize + _ALIGN((*cmsg).cmsg_len as usize) + _ALIGN(mem::size_of::<cmsghdr>());
+         let max = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
+diff --git a/src/unix/haiku/mod.rs b/src/unix/haiku/mod.rs
+index 6b168a470..9d04266c7 100644
+--- a/src/unix/haiku/mod.rs
++++ b/src/unix/haiku/mod.rs
+@@ -1533,7 +1533,7 @@ f! {
+     pub fn CMSG_NXTHDR(mhdr: *const msghdr, cmsg: *const cmsghdr) -> *mut cmsghdr {
+         if cmsg.is_null() {
+             return crate::CMSG_FIRSTHDR(mhdr);
+-        };
++        }
+         let next = cmsg as usize
+             + CMSG_ALIGN((*cmsg).cmsg_len as usize)
+             + CMSG_ALIGN(mem::size_of::<cmsghdr>());
+diff --git a/src/unix/hurd/mod.rs b/src/unix/hurd/mod.rs
+index 49bb07663..843e7f4c3 100644
+--- a/src/unix/hurd/mod.rs
++++ b/src/unix/hurd/mod.rs
+@@ -3445,7 +3445,7 @@ f! {
+     pub fn CMSG_NXTHDR(mhdr: *const msghdr, cmsg: *const cmsghdr) -> *mut cmsghdr {
+         if ((*cmsg).cmsg_len as usize) < mem::size_of::<cmsghdr>() {
+             return core::ptr::null_mut::<cmsghdr>();
+-        };
++        }
+         let next = (cmsg as usize + CMSG_ALIGN((*cmsg).cmsg_len as usize)) as *mut cmsghdr;
+         let max = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
+         if (next.offset(1)) as usize > max
+diff --git a/src/unix/linux_like/emscripten/mod.rs b/src/unix/linux_like/emscripten/mod.rs
+index a7dc492ed..57d00d187 100644
+--- a/src/unix/linux_like/emscripten/mod.rs
++++ b/src/unix/linux_like/emscripten/mod.rs
+@@ -1367,7 +1367,7 @@ f! {
+     pub fn CMSG_NXTHDR(mhdr: *const msghdr, cmsg: *const cmsghdr) -> *mut cmsghdr {
+         if ((*cmsg).cmsg_len as usize) < mem::size_of::<cmsghdr>() {
+             return core::ptr::null_mut::<cmsghdr>();
+-        };
++        }
+         let next = (cmsg as usize + super::CMSG_ALIGN((*cmsg).cmsg_len as usize)) as *mut cmsghdr;
+         let max = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
+         if (next.offset(1)) as usize > max {
+diff --git a/src/unix/solarish/mod.rs b/src/unix/solarish/mod.rs
+index 9f90c4cba..addfbe054 100644
+--- a/src/unix/solarish/mod.rs
++++ b/src/unix/solarish/mod.rs
+@@ -2422,7 +2422,7 @@ f! {
+     pub fn CMSG_NXTHDR(mhdr: *const crate::msghdr, cmsg: *const cmsghdr) -> *mut cmsghdr {
+         if cmsg.is_null() {
+             return crate::CMSG_FIRSTHDR(mhdr);
+-        };
++        }
+         let next =
+             _CMSG_HDR_ALIGN(cmsg as usize + (*cmsg).cmsg_len as usize + size_of::<cmsghdr>());
+         let max = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
+-- 
+2.43.0
+

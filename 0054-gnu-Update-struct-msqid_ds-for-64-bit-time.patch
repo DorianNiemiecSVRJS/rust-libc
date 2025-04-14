@@ -1,0 +1,152 @@
+From 85f205b50e531741f145e81fce82cde867993478 Mon Sep 17 00:00:00 2001
+From: Ola x Nilsson <olani@axis.com>
+Date: Mon, 27 Mar 2023 14:15:18 +0200
+Subject: [PATCH 54/80] gnu: Update struct msqid_ds for 64-bit time
+
+References:
+
+Common definition for _TIME_BITS=64
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/bits/types/struct_msqid64_ds_helper.h
+
+Generic implementation used by x86 and arm:
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/bits/types/struct_msqid_ds.h
+
+PowerPC:
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/powerpc/bits/types/struct_msqid_ds.h
+
+MIPS:
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/mips/bits/types/struct_msqid_ds.h
+
+SPARC:
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/sparc/bits/types/struct_msqid_ds.h
+
+(backport <https://github.com/rust-lang/libc/pull/4433>)
+(cherry picked from commit bb5a84a4dabe325c5a24fd0cfa04f63e91cdb0fe)
+---
+ src/unix/linux_like/linux/gnu/b32/arm/mod.rs   |  3 +++
+ src/unix/linux_like/linux/gnu/b32/mips/mod.rs  | 12 ++++++------
+ src/unix/linux_like/linux/gnu/b32/powerpc.rs   |  3 +++
+ src/unix/linux_like/linux/gnu/b32/sparc/mod.rs |  9 ++++++---
+ src/unix/linux_like/linux/gnu/b32/x86/mod.rs   |  3 +++
+ 5 files changed, 21 insertions(+), 9 deletions(-)
+
+diff --git a/src/unix/linux_like/linux/gnu/b32/arm/mod.rs b/src/unix/linux_like/linux/gnu/b32/arm/mod.rs
+index 95cb23609..68eafcb35 100644
+--- a/src/unix/linux_like/linux/gnu/b32/arm/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/arm/mod.rs
+@@ -133,10 +133,13 @@ s! {
+     pub struct msqid_ds {
+         pub msg_perm: crate::ipc_perm,
+         pub msg_stime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __glibc_reserved1: c_ulong,
+         pub msg_rtime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __glibc_reserved2: c_ulong,
+         pub msg_ctime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __glibc_reserved3: c_ulong,
+         pub __msg_cbytes: c_ulong,
+         pub msg_qnum: crate::msgqnum_t,
+diff --git a/src/unix/linux_like/linux/gnu/b32/mips/mod.rs b/src/unix/linux_like/linux/gnu/b32/mips/mod.rs
+index 649a8e04b..1de98a641 100644
+--- a/src/unix/linux_like/linux/gnu/b32/mips/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/mips/mod.rs
+@@ -161,22 +161,22 @@ s! {
+ 
+     pub struct msqid_ds {
+         pub msg_perm: crate::ipc_perm,
+-        #[cfg(target_endian = "big")]
++        #[cfg(all(not(gnu_time_bits64), target_endian = "big"))]
+         __glibc_reserved1: c_ulong,
+         pub msg_stime: crate::time_t,
+-        #[cfg(target_endian = "little")]
++        #[cfg(all(not(gnu_time_bits64), target_endian = "little"))]
+         __glibc_reserved1: c_ulong,
+-        #[cfg(target_endian = "big")]
++        #[cfg(all(not(gnu_time_bits64), target_endian = "big"))]
+         __glibc_reserved2: c_ulong,
+         pub msg_rtime: crate::time_t,
+-        #[cfg(target_endian = "little")]
++        #[cfg(all(not(gnu_time_bits64), target_endian = "little"))]
+         __glibc_reserved2: c_ulong,
+-        #[cfg(target_endian = "big")]
++        #[cfg(all(not(gnu_time_bits64), target_endian = "big"))]
+         __glibc_reserved3: c_ulong,
+         pub msg_ctime: crate::time_t,
+         #[cfg(target_endian = "little")]
+         __glibc_reserved3: c_ulong,
+-        pub __msg_cbytes: c_ulong,
++        __msg_cbytes: c_ulong,
+         pub msg_qnum: crate::msgqnum_t,
+         pub msg_qbytes: crate::msglen_t,
+         pub msg_lspid: crate::pid_t,
+diff --git a/src/unix/linux_like/linux/gnu/b32/powerpc.rs b/src/unix/linux_like/linux/gnu/b32/powerpc.rs
+index 0ecdbdd73..14d42e4b9 100644
+--- a/src/unix/linux_like/linux/gnu/b32/powerpc.rs
++++ b/src/unix/linux_like/linux/gnu/b32/powerpc.rs
+@@ -160,10 +160,13 @@ s! {
+ 
+     pub struct msqid_ds {
+         pub msg_perm: crate::ipc_perm,
++        #[cfg(not(gnu_time_bits64))]
+         __glibc_reserved1: c_uint,
+         pub msg_stime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __glibc_reserved2: c_uint,
+         pub msg_rtime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __glibc_reserved3: c_uint,
+         pub msg_ctime: crate::time_t,
+         pub __msg_cbytes: c_ulong,
+diff --git a/src/unix/linux_like/linux/gnu/b32/sparc/mod.rs b/src/unix/linux_like/linux/gnu/b32/sparc/mod.rs
+index 6081145cc..03760e72e 100644
+--- a/src/unix/linux_like/linux/gnu/b32/sparc/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/sparc/mod.rs
+@@ -176,19 +176,22 @@ s! {
+ 
+     pub struct msqid_ds {
+         pub msg_perm: crate::ipc_perm,
++        #[cfg(not(gnu_time_bits64))]
+         __pad1: c_uint,
+         pub msg_stime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __pad2: c_uint,
+         pub msg_rtime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __pad3: c_uint,
+         pub msg_ctime: crate::time_t,
+-        pub __msg_cbytes: c_ushort,
++        pub __msg_cbytes: c_ulong,
+         pub msg_qnum: crate::msgqnum_t,
+         pub msg_qbytes: crate::msglen_t,
+         pub msg_lspid: crate::pid_t,
+         pub msg_lrpid: crate::pid_t,
+-        __glibc_reserved1: c_ulong,
+-        __glibc_reserved2: c_ulong,
++        __glibc_reserved4: c_ulong,
++        __glibc_reserved5: c_ulong,
+     }
+ }
+ 
+diff --git a/src/unix/linux_like/linux/gnu/b32/x86/mod.rs b/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
+index 2f2751f44..729dc7b9e 100644
+--- a/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
+@@ -207,10 +207,13 @@ s! {
+     pub struct msqid_ds {
+         pub msg_perm: crate::ipc_perm,
+         pub msg_stime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __glibc_reserved1: c_ulong,
+         pub msg_rtime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __glibc_reserved2: c_ulong,
+         pub msg_ctime: crate::time_t,
++        #[cfg(not(gnu_time_bits64))]
+         __glibc_reserved3: c_ulong,
+         pub __msg_cbytes: c_ulong,
+         pub msg_qnum: crate::msgqnum_t,
+-- 
+2.43.0
+

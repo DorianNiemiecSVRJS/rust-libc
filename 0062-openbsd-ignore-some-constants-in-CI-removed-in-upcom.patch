@@ -1,0 +1,67 @@
+From 44b29ed525af4f3eecb55e5db84f31d7ae1b48b2 Mon Sep 17 00:00:00 2001
+From: Sebastien Marie <semarie@kapouay.eu.org>
+Date: Sun, 25 May 2025 12:59:10 +0000
+Subject: [PATCH 62/80] openbsd: ignore some constants in CI (removed in
+ upcoming OpenBSD 7.8)
+
+(backport <https://github.com/rust-lang/libc/pull/4461>)
+(cherry picked from commit f5220c14ac26b67bcfc05567f562c8d497a9ce4a)
+---
+ libc-test/build.rs | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/libc-test/build.rs b/libc-test/build.rs
+index ae0a54bdd..c6282de1a 100644
+--- a/libc-test/build.rs
++++ b/libc-test/build.rs
+@@ -622,9 +622,12 @@ fn test_openbsd(target: &str) {
+             "KERN_MAXID" | "NET_RT_MAXID" => true,
+             "EV_SYSFLAGS" => true,
+ 
+-            // Removed in OpenBSD 7.7 (unused since 1991)
++            // Removed in OpenBSD 7.7
+             "ATF_COM" | "ATF_PERM" | "ATF_PUBL" | "ATF_USETRAILERS" => true,
+ 
++            // Removed in OpenBSD 7.8
++            "CTL_FS" | "SO_NETPROC" => true,
++
+             _ => false,
+         }
+     });
+@@ -5622,9 +5625,9 @@ fn test_aix(target: &str) {
+     });
+ 
+     cfg.type_name(move |ty, is_struct, is_union| match ty {
+-        "DIR"  => ty.to_string(),
+-        "FILE"  => ty.to_string(),
+-        "ACTION"  => ty.to_string(),
++        "DIR" => ty.to_string(),
++        "FILE" => ty.to_string(),
++        "ACTION" => ty.to_string(),
+ 
+         // 'sigval' is a struct in Rust, but a union in C.
+         "sigval" => format!("union sigval"),
+@@ -5711,9 +5714,9 @@ fn test_aix(target: &str) {
+             // POSIX-compliant versions in the system libc. As a result,
+             // function pointer comparisons between the C and Rust sides
+             // would fail.
+-            "getpwuid_r" | "getpwnam_r" | "getgrgid_r" | "getgrnam_r"
+-            | "aio_cancel" | "aio_error" | "aio_fsync" | "aio_read"
+-            | "aio_return" | "aio_suspend" | "aio_write" | "select" => true,
++            "getpwuid_r" | "getpwnam_r" | "getgrgid_r" | "getgrnam_r" | "aio_cancel"
++            | "aio_error" | "aio_fsync" | "aio_read" | "aio_return" | "aio_suspend"
++            | "aio_write" | "select" => true,
+ 
+             // 'getdtablesize' is a constant in the AIX header but it is
+             // a real function in libc which the Rust side is resolved to.
+@@ -5730,7 +5733,6 @@ fn test_aix(target: &str) {
+         }
+     });
+ 
+-
+     cfg.volatile_item(|i| {
+         use ctest::VolatileItemKind::*;
+         match i {
+-- 
+2.43.0
+

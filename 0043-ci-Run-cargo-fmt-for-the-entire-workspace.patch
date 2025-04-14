@@ -1,0 +1,34 @@
+From a2189ad2caac97baf19f11f1223893eebfcbd309 Mon Sep 17 00:00:00 2001
+From: Trevor Gross <tmgross@umich.edu>
+Date: Tue, 13 May 2025 21:16:20 +0000
+Subject: [PATCH 43/80] ci: Run `cargo fmt` for the entire workspace
+
+Currently only `src/` is checked. Add a run that covers everything else.
+
+This does mean files in `src/` get formatted twice, but `cargo fmt`
+doesn't support an `--exclude` option.
+
+(backport <https://github.com/rust-lang/libc/pull/4454>)
+(cherry picked from commit 1ca8b368a84893ab57fcee3ce26066e255d9b8b2)
+---
+ ci/style.sh | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/ci/style.sh b/ci/style.sh
+index 5b200796a..2b5ddfc63 100755
+--- a/ci/style.sh
++++ b/ci/style.sh
+@@ -59,6 +59,10 @@ done < "$tmpfile"
+ 
+ rm "$tmpfile"
+ 
++# Run once from workspace root to get everything that wasn't handled as an
++# individual file.
++cargo fmt
++
+ if shellcheck --version ; then
+     find . -name '*.sh' -print0 | xargs -0 shellcheck
+ else
+-- 
+2.43.0
+

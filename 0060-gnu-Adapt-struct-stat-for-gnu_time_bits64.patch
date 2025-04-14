@@ -1,0 +1,184 @@
+From 36b2e484a5af6ae4da5e282b57b9070302fa8c2c Mon Sep 17 00:00:00 2001
+From: Ola x Nilsson <olani@axis.com>
+Date: Tue, 25 Mar 2025 18:38:13 +0100
+Subject: [PATCH 60/80] gnu: Adapt struct stat for gnu_time_bits64
+
+References:
+
+ARM:
+https://github.com/bminor/glibc/blob/77930e0447e0b37a129db0e13c6c6f5e60a3019e/sysdeps/unix/sysv/linux/arm/bits/struct_stat.h
+
+MIPS:
+https://github.com/bminor/glibc/blob/77930e0447e0b37a129db0e13c6c6f5e60a3019e/sysdeps/unix/sysv/linux/mips/bits/struct_stat.h
+
+POWERPC:
+https://github.com/bminor/glibc/blob/77930e0447e0b37a129db0e13c6c6f5e60a3019e/sysdeps/unix/sysv/linux/powerpc/bits/struct_stat.h
+
+SPARC:
+https://github.com/bminor/glibc/blob/77930e0447e0b37a129db0e13c6c6f5e60a3019e/sysdeps/unix/sysv/linux/sparc/bits/struct_stat.h
+
+x86:
+https://github.com/bminor/glibc/blob/77930e0447e0b37a129db0e13c6c6f5e60a3019e/sysdeps/unix/sysv/linux/x86/bits/struct_stat.h
+
+Common definition for _TIME_BITS=64
+https://github.com/bminor/glibc/blob/77930e0447e0b37a129db0e13c6c6f5e60a3019e/sysdeps/unix/sysv/linux/bits/struct_stat_time64_helper.h
+
+(backport <https://github.com/rust-lang/libc/pull/4433>)
+(cherry picked from commit 8995e0be55ac62886d6e1568ca4f0ae785986091)
+---
+ src/unix/linux_like/linux/gnu/b32/mips/mod.rs | 25 +++++++++++++++++--
+ src/unix/linux_like/linux/gnu/b32/mod.rs      | 14 ++++++++---
+ src/unix/linux_like/linux/gnu/b32/powerpc.rs  |  9 +++++++
+ 3 files changed, 43 insertions(+), 5 deletions(-)
+
+diff --git a/src/unix/linux_like/linux/gnu/b32/mips/mod.rs b/src/unix/linux_like/linux/gnu/b32/mips/mod.rs
+index 1de98a641..759da2334 100644
+--- a/src/unix/linux_like/linux/gnu/b32/mips/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/mips/mod.rs
+@@ -5,8 +5,12 @@ pub type wchar_t = i32;
+ 
+ s! {
+     pub struct stat {
++        #[cfg(not(gnu_time_bits64))]
+         pub st_dev: c_ulong,
++        #[cfg(gnu_time_bits64)]
++        pub st_dev: crate::dev_t,
+ 
++        #[cfg(not(gnu_time_bits64))]
+         st_pad1: [c_long; 3],
+ 
+         pub st_ino: crate::ino_t,
+@@ -16,11 +20,14 @@ s! {
+         pub st_uid: crate::uid_t,
+         pub st_gid: crate::gid_t,
+ 
++        #[cfg(not(gnu_time_bits64))]
+         pub st_rdev: c_ulong,
++        #[cfg(gnu_time_bits64)]
++        pub st_rdev: crate::dev_t,
+ 
+         #[cfg(not(gnu_file_offset_bits64))]
+         st_pad2: [c_long; 2],
+-        #[cfg(gnu_file_offset_bits64)]
++        #[cfg(all(not(gnu_time_bits64), gnu_file_offset_bits64))]
+         st_pad2: [c_long; 3],
+ 
+         pub st_size: off_t,
+@@ -28,17 +35,31 @@ s! {
+         #[cfg(not(gnu_file_offset_bits64))]
+         st_pad3: c_long,
+ 
++        #[cfg(gnu_time_bits64)]
++        pub st_blksize: crate::blksize_t,
++        #[cfg(gnu_time_bits64)]
++        pub st_blocks: crate::blkcnt_t,
++
+         pub st_atime: crate::time_t,
++        #[cfg(gnu_time_bits64)]
++        _atime_pad: c_int,
+         pub st_atime_nsec: c_long,
+         pub st_mtime: crate::time_t,
++        #[cfg(gnu_time_bits64)]
++        _mtime_pad: c_int,
+         pub st_mtime_nsec: c_long,
+         pub st_ctime: crate::time_t,
++        #[cfg(gnu_time_bits64)]
++        _ctime_pad: c_int,
+         pub st_ctime_nsec: c_long,
+ 
++        #[cfg(not(gnu_time_bits64))]
+         pub st_blksize: crate::blksize_t,
+-        #[cfg(gnu_file_offset_bits64)]
++        #[cfg(all(not(gnu_time_bits64), gnu_file_offset_bits64))]
+         st_pad4: c_long,
++        #[cfg(not(gnu_time_bits64))]
+         pub st_blocks: crate::blkcnt_t,
++        #[cfg(not(gnu_time_bits64))]
+         st_pad5: [c_long; 14],
+     }
+ 
+diff --git a/src/unix/linux_like/linux/gnu/b32/mod.rs b/src/unix/linux_like/linux/gnu/b32/mod.rs
+index fc39d7672..fe843a764 100644
+--- a/src/unix/linux_like/linux/gnu/b32/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/mod.rs
+@@ -80,11 +80,12 @@ cfg_if! {
+             pub struct stat {
+                 pub st_dev: crate::dev_t,
+ 
++                #[cfg(not(gnu_time_bits64))]
+                 __pad1: c_uint,
+ 
+-                #[cfg(not(gnu_file_offset_bits64))]
++                #[cfg(any(gnu_time_bits64, not(gnu_file_offset_bits64)))]
+                 pub st_ino: crate::ino_t,
+-                #[cfg(all(gnu_file_offset_bits64))]
++                #[cfg(all(not(gnu_time_bits64), gnu_file_offset_bits64))]
+                 __st_ino: __ino_t,
+ 
+                 pub st_mode: crate::mode_t,
+@@ -94,6 +95,7 @@ cfg_if! {
+ 
+                 pub st_rdev: crate::dev_t,
+ 
++                #[cfg(not(gnu_time_bits64))]
+                 __pad2: c_uint,
+ 
+                 pub st_size: off_t,
+@@ -103,16 +105,22 @@ cfg_if! {
+ 
+                 pub st_atime: crate::time_t,
+                 pub st_atime_nsec: c_long,
++                #[cfg(gnu_time_bits64)]
++                _atime_pad: c_int,
+                 pub st_mtime: crate::time_t,
+                 pub st_mtime_nsec: c_long,
++                #[cfg(gnu_time_bits64)]
++                _mtime_pad: c_int,
+                 pub st_ctime: crate::time_t,
+                 pub st_ctime_nsec: c_long,
++                #[cfg(gnu_time_bits64)]
++                _ctime_pad: c_int,
+ 
+                 #[cfg(not(gnu_file_offset_bits64))]
+                 __glibc_reserved4: c_long,
+                 #[cfg(not(gnu_file_offset_bits64))]
+                 __glibc_reserved5: c_long,
+-                #[cfg(gnu_file_offset_bits64)]
++                #[cfg(all(not(gnu_time_bits64), gnu_file_offset_bits64))]
+                 pub st_ino: crate::ino_t,
+             }
+         }
+diff --git a/src/unix/linux_like/linux/gnu/b32/powerpc.rs b/src/unix/linux_like/linux/gnu/b32/powerpc.rs
+index 14d42e4b9..80c2bee56 100644
+--- a/src/unix/linux_like/linux/gnu/b32/powerpc.rs
++++ b/src/unix/linux_like/linux/gnu/b32/powerpc.rs
+@@ -67,17 +67,26 @@ s! {
+         pub st_uid: crate::uid_t,
+         pub st_gid: crate::gid_t,
+         pub st_rdev: crate::dev_t,
++        #[cfg(not(gnu_time_bits64))]
+         __pad2: c_ushort,
+         pub st_size: off_t,
+         pub st_blksize: crate::blksize_t,
+         pub st_blocks: crate::blkcnt_t,
+         pub st_atime: crate::time_t,
++        #[cfg(gnu_time_bits64)]
++        _atime_pad: c_int,
+         pub st_atime_nsec: c_long,
+         pub st_mtime: crate::time_t,
++        #[cfg(gnu_time_bits64)]
++        _mtime_pad: c_int,
+         pub st_mtime_nsec: c_long,
+         pub st_ctime: crate::time_t,
++        #[cfg(gnu_time_bits64)]
++        _ctime_pad: c_int,
+         pub st_ctime_nsec: c_long,
++        #[cfg(not(gnu_time_bits64))]
+         __glibc_reserved4: c_ulong,
++        #[cfg(not(gnu_time_bits64))]
+         __glibc_reserved5: c_ulong,
+     }
+ 
+-- 
+2.43.0
+

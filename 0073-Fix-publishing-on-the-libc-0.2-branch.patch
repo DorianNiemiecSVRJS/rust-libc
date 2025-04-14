@@ -1,0 +1,27 @@
+From 6787debbcf474846d3e74f10e4090767555dc9b8 Mon Sep 17 00:00:00 2001
+From: Trevor Gross <tmgross@umich.edu>
+Date: Fri, 13 Jun 2025 16:51:18 +0000
+Subject: [PATCH 73/80] Fix publishing on the `libc-0.2` branch
+
+In the cherry pick for d8e39a2823 ("chore: cleanup Cargo.toml and rm
+perl"), I accidentally picked up the `publish = false` line which isn't
+intended for this branch. Remove it so we get releases again.
+---
+ Cargo.toml | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index bbe151dd5..b9d9d73fd 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -5,7 +5,6 @@ keywords = ["libc", "ffi", "bindings", "operating", "system"]
+ categories = ["external-ffi-bindings", "no-std", "os"]
+ exclude = ["/ci/*", "/.github/*", "/.cirrus.yml", "/triagebot.toml"]
+ description = "Raw FFI bindings to platform libraries like libc."
+-publish = false # On the main branch, we don't want to publish anything
+ authors = ["The Rust Project Developers"]
+ edition = "2021"
+ license = "MIT OR Apache-2.0"
+-- 
+2.43.0
+

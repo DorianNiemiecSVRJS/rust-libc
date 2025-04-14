@@ -1,0 +1,56 @@
+From c469a85507fa25c5851f8e3277fad44d51d356b7 Mon Sep 17 00:00:00 2001
+From: Reagan Bohan <xbjfk.github@gmail.com>
+Date: Sun, 4 May 2025 04:50:21 +0000
+Subject: [PATCH 29/80] ci: install-musl: upgrade to 1.2.3
+
+This will be chosen based on the RUST_LIBC_UNSTABLE_MUSL_V1_2_3
+variable.
+
+Co-authored-by: Daniel Frampton <Daniel.Frampton@microsoft.com>
+
+(backport <https://github.com/rust-lang/libc/pull/4443>)
+(cherry picked from commit e7762a8fdba09b1dd59a29b1915c60e862ec6a57)
+---
+ .github/workflows/ci.yaml | 12 ++++++++++++
+ ci/install-musl.sh        |  2 +-
+ 2 files changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/.github/workflows/ci.yaml b/.github/workflows/ci.yaml
+index 9b98d1d83..84d8d1a1f 100644
+--- a/.github/workflows/ci.yaml
++++ b/.github/workflows/ci.yaml
+@@ -196,6 +196,18 @@ jobs:
+             env:
+               RUST_LIBC_UNSTABLE_GNU_FILE_OFFSET_BITS: 64
+             artifact-tag: offset-bits64
++          - target: aarch64-unknown-linux-musl
++            env:
++              RUST_LIBC_UNSTABLE_MUSL_V1_2_3: 1
++          - target: arm-unknown-linux-musleabihf
++            env:
++              RUST_LIBC_UNSTABLE_MUSL_V1_2_3: 1
++          - target: i686-unknown-linux-musl
++            env:
++              RUST_LIBC_UNSTABLE_MUSL_V1_2_3: 1
++          - target: loongarch64-unknown-linux-musl
++            env:
++              RUST_LIBC_UNSTABLE_MUSL_V1_2_3: 1
+           # FIXME(ppc): SIGILL running tests, see
+           # https://github.com/rust-lang/libc/pull/4254#issuecomment-2636288713
+           # - target: powerpc-unknown-linux-gnu
+diff --git a/ci/install-musl.sh b/ci/install-musl.sh
+index 416874d91..8567c0848 100755
+--- a/ci/install-musl.sh
++++ b/ci/install-musl.sh
+@@ -10,7 +10,7 @@ case ${1} in
+         musl_version=1.2.5
+         ;;
+     *)
+-        musl_version=1.1.24
++        [ -n "${RUST_LIBC_UNSTABLE_MUSL_V1_2_3:-}" ] && musl_version=1.2.3 || musl_version=1.1.24
+         ;;
+ esac
+ 
+-- 
+2.43.0
+

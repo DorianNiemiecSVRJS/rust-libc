@@ -1,0 +1,75 @@
+From 952bc8146c46ae860b5e11f94b45daa7c4a34c7a Mon Sep 17 00:00:00 2001
+From: Yuri Astrakhan <YuriAstrakhan@gmail.com>
+Date: Mon, 14 Apr 2025 15:34:21 -0400
+Subject: [PATCH 02/80] chore: cleanup Cargo.toml and rm perl
+
+* Remove Cargo settings that are identical to the defaults (per Cargo [recommendations](https://doc.rust-lang.org/cargo/reference/manifest.html))
+* Fix perl-based method to extract MSRV
+
+(backport <https://github.com/rust-lang/libc/pull/4408>)
+(cherry picked from commit d8e39a2823b6f6d433d93436a5eedbb0117adeab)
+---
+ Cargo.toml           | 17 ++++++-----------
+ libc-test/Cargo.toml | 12 ++++--------
+ 2 files changed, 10 insertions(+), 19 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index cabbc528a..9e53e4511 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -1,21 +1,16 @@
+ [package]
+ name = "libc"
+ version = "0.2.172"
+-authors = ["The Rust Project Developers"]
+-license = "MIT OR Apache-2.0"
+-readme = "README.md"
+-edition = "2021"
+-repository = "https://github.com/rust-lang/libc"
+-homepage = "https://github.com/rust-lang/libc"
+-documentation = "https://docs.rs/libc/"
+ keywords = ["libc", "ffi", "bindings", "operating", "system"]
+ categories = ["external-ffi-bindings", "no-std", "os"]
+-build = "build.rs"
+ exclude = ["/ci/*", "/.github/*", "/.cirrus.yml", "/triagebot.toml"]
++description = "Raw FFI bindings to platform libraries like libc."
++publish = false # On the main branch, we don't want to publish anything
++authors = ["The Rust Project Developers"]
++edition = "2021"
++license = "MIT OR Apache-2.0"
++repository = "https://github.com/rust-lang/libc"
+ rust-version = "1.63"
+-description = """
+-Raw FFI bindings to platform libraries like libc.
+-"""
+ 
+ [package.metadata.docs.rs]
+ features = ["extra_traits"]
+diff --git a/libc-test/Cargo.toml b/libc-test/Cargo.toml
+index 26b38621f..9573c3fdb 100644
+--- a/libc-test/Cargo.toml
++++ b/libc-test/Cargo.toml
+@@ -1,16 +1,12 @@
+ [package]
+ name = "libc-test"
+-version = "0.2.155"
+-edition = "2021"
++version = "0.1.0"
++description = "A test crate for the libc crate."
++publish = false
+ authors = ["The Rust Project Developers"]
++edition = "2021"
+ license = "MIT OR Apache-2.0"
+-build = "build.rs"
+-publish = false
+ repository = "https://github.com/rust-lang/libc"
+-homepage = "https://github.com/rust-lang/libc"
+-description = """
+-A test crate for the libc crate.
+-"""
+ 
+ [dependencies]
+ cfg-if = "1.0.0"
+-- 
+2.43.0
+

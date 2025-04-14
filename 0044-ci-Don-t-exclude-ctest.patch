@@ -1,0 +1,51 @@
+From 3b98e7d82a134530bf7508f8df3661eb2e2f42f1 Mon Sep 17 00:00:00 2001
+From: Trevor Gross <tmgross@umich.edu>
+Date: Tue, 13 May 2025 21:18:48 +0000
+Subject: [PATCH 44/80] ci: Don't exclude `ctest/`
+
+There are no longer any shell files in `ctest/`, so this FIXME can be
+resolved.
+
+Also move this to the end so missing shellcheck doesn't exit before the
+sort checks.
+
+(backport <https://github.com/rust-lang/libc/pull/4454>)
+[ note - this backport doesn't do much since `ctest/` was never
+  excluded, but it does keep file structure in sync - Trevor ]
+(cherry picked from commit 654bf4eb22056d8b343e578c8a299cd789a7cf0f)
+---
+ ci/style.sh | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/ci/style.sh b/ci/style.sh
+index 2b5ddfc63..0d4a4f953 100755
+--- a/ci/style.sh
++++ b/ci/style.sh
+@@ -63,13 +63,6 @@ rm "$tmpfile"
+ # individual file.
+ cargo fmt
+ 
+-if shellcheck --version ; then
+-    find . -name '*.sh' -print0 | xargs -0 shellcheck
+-else
+-    echo "shellcheck not found"
+-    exit 1
+-fi
+-
+ # Ensure that `sort` output is not locale-dependent
+ export LC_ALL=C
+ 
+@@ -91,3 +84,10 @@ for file in libc-test/semver/*.txt; do
+         exit 1
+     fi
+ done
++
++if shellcheck --version ; then
++    find . -name '*.sh' -print0 | xargs -0 shellcheck
++else
++    echo "shellcheck not found"
++    exit 1
++fi
+-- 
+2.43.0
+

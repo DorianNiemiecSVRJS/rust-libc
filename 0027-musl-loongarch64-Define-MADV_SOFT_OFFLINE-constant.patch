@@ -1,0 +1,53 @@
+From e9fc5808c55555e3b3181dea340891d2e87ec086 Mon Sep 17 00:00:00 2001
+From: WANG Rui <wangrui@loongson.cn>
+Date: Wed, 7 May 2025 10:30:38 +0800
+Subject: [PATCH 27/80] musl: loongarch64: Define MADV_SOFT_OFFLINE constant
+
+(backport <https://github.com/rust-lang/libc/pull/4448>)
+(cherry picked from commit 054c95888c2b20b341166ff49a1252c180041005)
+---
+ libc-test/semver/linux-gnu-loongarch64.txt            | 1 -
+ libc-test/semver/linux-loongarch64.txt                | 1 +
+ src/unix/linux_like/linux/musl/b64/loongarch64/mod.rs | 2 ++
+ 3 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/libc-test/semver/linux-gnu-loongarch64.txt b/libc-test/semver/linux-gnu-loongarch64.txt
+index ec6595b79..ccf233e6e 100644
+--- a/libc-test/semver/linux-gnu-loongarch64.txt
++++ b/libc-test/semver/linux-gnu-loongarch64.txt
+@@ -10,7 +10,6 @@ KEYCTL_CAPS0_RESTRICT_KEYRING
+ KEYCTL_CAPS1_NS_KEYRING_NAME
+ KEYCTL_CAPS1_NS_KEY_TAG
+ KEYCTL_MOVE
+-MADV_SOFT_OFFLINE
+ PTRACE_GETFPREGS
+ PTRACE_GETFPXREGS
+ PTRACE_GETREGS
+diff --git a/libc-test/semver/linux-loongarch64.txt b/libc-test/semver/linux-loongarch64.txt
+index 1b50e7248..7f0446c76 100644
+--- a/libc-test/semver/linux-loongarch64.txt
++++ b/libc-test/semver/linux-loongarch64.txt
+@@ -48,6 +48,7 @@ BPF_XOR
+ CIBAUD
+ FICLONE
+ FICLONERANGE
++MADV_SOFT_OFFLINE
+ MAP_SYNC
+ NFT_MSG_DELOBJ
+ NFT_MSG_GETOBJ
+diff --git a/src/unix/linux_like/linux/musl/b64/loongarch64/mod.rs b/src/unix/linux_like/linux/musl/b64/loongarch64/mod.rs
+index e96bcbb27..55ffc20c3 100644
+--- a/src/unix/linux_like/linux/musl/b64/loongarch64/mod.rs
++++ b/src/unix/linux_like/linux/musl/b64/loongarch64/mod.rs
+@@ -532,6 +532,8 @@ pub const ENOTRECOVERABLE: c_int = 131;
+ pub const EHWPOISON: c_int = 133;
+ pub const ERFKILL: c_int = 132;
+ 
++pub const MADV_SOFT_OFFLINE: c_int = 101;
++
+ pub const SA_ONSTACK: c_int = 0x08000000;
+ pub const SA_SIGINFO: c_int = 0x00000004;
+ pub const SA_NOCLDWAIT: c_int = 0x00000002;
+-- 
+2.43.0
+

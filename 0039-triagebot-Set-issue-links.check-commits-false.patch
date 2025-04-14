@@ -1,0 +1,31 @@
+From e3c6d0d80baf9ff327cacee433618abaf3fbfa6b Mon Sep 17 00:00:00 2001
+From: Trevor Gross <tmgross@umich.edu>
+Date: Sun, 4 May 2025 05:30:57 +0000
+Subject: [PATCH 39/80] triagebot: Set `issue-links.check-commits = false`
+
+Disable warnings when crosslinking issues, since we do want contributors
+to do this.
+
+Cc: https://github.com/rust-lang/triagebot/pull/1966
+
+(backport <https://github.com/rust-lang/libc/pull/4444>)
+(cherry picked from commit 6a8609cb5dfcdfcb67078295c425015f71522b98)
+---
+ triagebot.toml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/triagebot.toml b/triagebot.toml
+index fe3a00af5..6aa18772a 100644
+--- a/triagebot.toml
++++ b/triagebot.toml
+@@ -13,6 +13,7 @@ contributing_url = "https://github.com/rust-lang/libc/blob/HEAD/CONTRIBUTING.md"
+ 
+ # Ensure issue links link to this repo
+ [issue-links]
++check-commits = false # don't forbid links to issues
+ 
+ # Prevents mentions in commits to avoid users being spammed
+ [no-mentions]
+-- 
+2.43.0
+

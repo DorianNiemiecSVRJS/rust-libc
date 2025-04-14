@@ -1,0 +1,36 @@
+From 56a16c16bea74b126438a142aa4997c1c46edcb7 Mon Sep 17 00:00:00 2001
+From: Kartik Agarwala <agarwala.kartik@gmail.com>
+Date: Mon, 14 Apr 2025 10:57:18 +0530
+Subject: [PATCH 04/80] Add missing UTIME defines and TASK_RENAME_LENGTH
+
+(backport <https://github.com/rust-lang/libc/pull/4407>)
+(cherry picked from commit e119caeaffe5d0b78c3c6beb45f7a038550c625c)
+---
+ src/vxworks/mod.rs | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/vxworks/mod.rs b/src/vxworks/mod.rs
+index e2051baa2..cdca84e47 100644
+--- a/src/vxworks/mod.rs
++++ b/src/vxworks/mod.rs
+@@ -745,6 +745,7 @@ pub const S_taskLib_ILLEGAL_PRIORITY: c_int = taskErrorBase + 0x0068;
+ 
+ // FIXME(vxworks): could also be useful for TASK_DESC type
+ pub const VX_TASK_NAME_LENGTH: c_int = 31;
++pub const VX_TASK_RENAME_LENGTH: c_int = 16;
+ 
+ // semLibCommon.h
+ pub const S_semLib_INVALID_STATE: c_int = semErrorBase + 0x0065;
+@@ -806,6 +807,9 @@ pub const S_IWOTH: c_int = 0o0002;
+ pub const S_IXOTH: c_int = 0o0001;
+ pub const S_IRWXO: c_int = 0o0007;
+ 
++pub const UTIME_OMIT: c_long = 0x3ffffffe;
++pub const UTIME_NOW: c_long = 0x3fffffff;
++
+ // socket.h
+ pub const SOL_SOCKET: c_int = 0xffff;
+ pub const SOMAXCONN: c_int = 128;
+-- 
+2.43.0
+

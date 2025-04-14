@@ -1,0 +1,53 @@
+From f1e459f1846fd6266f71aefcfbe9fef7a7abb56d Mon Sep 17 00:00:00 2001
+From: Mattias Nissler <mnissler@rivosinc.com>
+Date: Tue, 6 May 2025 01:05:23 -0700
+Subject: [PATCH 28/80] Add MADV_SOFT_OFFLINE definition for RISC-V musl
+ targets
+
+(backport <https://github.com/rust-lang/libc/pull/4447>)
+(cherry picked from commit 118a904c4e690327d2ca3a633822ac1171cae5fa)
+---
+ libc-test/semver/linux-riscv64gc.txt              | 1 +
+ src/unix/linux_like/linux/musl/b32/riscv32/mod.rs | 1 +
+ src/unix/linux_like/linux/musl/b64/riscv64/mod.rs | 1 +
+ 3 files changed, 3 insertions(+)
+
+diff --git a/libc-test/semver/linux-riscv64gc.txt b/libc-test/semver/linux-riscv64gc.txt
+index 09519e9df..01609e899 100644
+--- a/libc-test/semver/linux-riscv64gc.txt
++++ b/libc-test/semver/linux-riscv64gc.txt
+@@ -24,6 +24,7 @@ KEYCTL_CAPS0_RESTRICT_KEYRING
+ KEYCTL_CAPS1_NS_KEYRING_NAME
+ KEYCTL_CAPS1_NS_KEY_TAG
+ KEYCTL_MOVE
++MADV_SOFT_OFFLINE
+ MAP_SYNC
+ NFT_MSG_DELOBJ
+ NFT_MSG_GETOBJ
+diff --git a/src/unix/linux_like/linux/musl/b32/riscv32/mod.rs b/src/unix/linux_like/linux/musl/b32/riscv32/mod.rs
+index 9c0525cb1..9b7610596 100644
+--- a/src/unix/linux_like/linux/musl/b32/riscv32/mod.rs
++++ b/src/unix/linux_like/linux/musl/b32/riscv32/mod.rs
+@@ -246,6 +246,7 @@ pub const O_DIRECT: c_int = 16384;
+ pub const O_DIRECTORY: c_int = 65536;
+ pub const O_LARGEFILE: c_int = 0o0100000;
+ pub const O_NOFOLLOW: c_int = 131072;
++pub const MADV_SOFT_OFFLINE: c_int = 101;
+ pub const MAP_HUGETLB: c_int = 262144;
+ pub const MAP_LOCKED: c_int = 8192;
+ pub const MAP_NORESERVE: c_int = 16384;
+diff --git a/src/unix/linux_like/linux/musl/b64/riscv64/mod.rs b/src/unix/linux_like/linux/musl/b64/riscv64/mod.rs
+index 2b9b394d5..115ec076f 100644
+--- a/src/unix/linux_like/linux/musl/b64/riscv64/mod.rs
++++ b/src/unix/linux_like/linux/musl/b64/riscv64/mod.rs
+@@ -572,6 +572,7 @@ pub const POLLWRBAND: c_short = 0x200;
+ pub const SOCK_STREAM: c_int = 1;
+ pub const SOCK_DGRAM: c_int = 2;
+ 
++pub const MADV_SOFT_OFFLINE: c_int = 101;
+ pub const MAP_ANON: c_int = 0x0020;
+ pub const MAP_GROWSDOWN: c_int = 0x0100;
+ pub const MAP_DENYWRITE: c_int = 0x0800;
+-- 
+2.43.0
+

@@ -1,0 +1,91 @@
+From 52035e1c00577a3df95b55cfe24c847d6ef72644 Mon Sep 17 00:00:00 2001
+From: Ola x Nilsson <olani@axis.com>
+Date: Tue, 25 Mar 2025 16:08:33 +0100
+Subject: [PATCH 50/80] gnu: Set up the CI for _TIME_BITS=64
+
+Add new jobs for i686 in test_tier1 and arm and powerpc in test_tier2
+where RUST_LIBC_UNSTABLE_GNU_TIME_BITS=64.
+
+Use artifact-tag to avoid artifact name collisions.
+
+(backport <https://github.com/rust-lang/libc/pull/4433>)
+(cherry picked from commit 352274a3dedcbb942da5eca5cf7df75b15444518)
+---
+ .github/workflows/ci.yaml | 14 ++++++++++++++
+ ci/run-docker.sh          |  1 +
+ ci/verify-build.sh        |  7 +++++--
+ 3 files changed, 20 insertions(+), 2 deletions(-)
+
+diff --git a/.github/workflows/ci.yaml b/.github/workflows/ci.yaml
+index 84d8d1a1f..97abaef3f 100644
+--- a/.github/workflows/ci.yaml
++++ b/.github/workflows/ci.yaml
+@@ -99,6 +99,12 @@ jobs:
+             artifact-tag: offset-bits64
+             env:
+               RUST_LIBC_UNSTABLE_GNU_FILE_OFFSET_BITS: 64
++          - target: i686-unknown-linux-gnu
++            docker: true
++            os: ubuntu-24.04
++            artifact-tag: time-bits64
++            env:
++              RUST_LIBC_UNSTABLE_GNU_TIME_BITS: 64
+           - target: x86_64-unknown-linux-gnu
+             docker: true
+             os: ubuntu-24.04
+@@ -196,6 +202,10 @@ jobs:
+             env:
+               RUST_LIBC_UNSTABLE_GNU_FILE_OFFSET_BITS: 64
+             artifact-tag: offset-bits64
++          - target: arm-unknown-linux-gnueabihf
++            env:
++              RUST_LIBC_UNSTABLE_GNU_TIME_BITS: 64
++            artifact-tag: time-bits64
+           - target: aarch64-unknown-linux-musl
+             env:
+               RUST_LIBC_UNSTABLE_MUSL_V1_2_3: 1
+@@ -215,6 +225,10 @@ jobs:
+           #   env:
+           #     RUST_LIBC_UNSTABLE_GNU_FILE_OFFSET_BITS: 64
+           #   artifact-tag: offset-bits64
++          # - target: powerpc-unknown-linux-gnu
++          #   env:
++          #     RUST_LIBC_UNSTABLE_GNU_TIME_BITS: 64
++          #   artifact-tag: time-bits64
+     timeout-minutes: 25
+     env:
+       TARGET: ${{ matrix.target }}
+diff --git a/ci/run-docker.sh b/ci/run-docker.sh
+index 6e18e520c..9411d39e5 100755
+--- a/ci/run-docker.sh
++++ b/ci/run-docker.sh
+@@ -44,6 +44,7 @@ run() {
+         --env LIBC_CI \
+         --env LIBC_CI_ZBUILD_STD \
+         --env RUST_LIBC_UNSTABLE_GNU_FILE_OFFSET_BITS \
++        --env RUST_LIBC_UNSTABLE_GNU_TIME_BITS \
+         --env CARGO_HOME=/cargo \
+         --env CARGO_TARGET_DIR=/checkout/target \
+         --volume "$CARGO_HOME":/cargo \
+diff --git a/ci/verify-build.sh b/ci/verify-build.sh
+index 375a5de1b..7def28922 100755
+--- a/ci/verify-build.sh
++++ b/ci/verify-build.sh
+@@ -76,9 +76,12 @@ test_target() {
+         # Test with the equivalent of __USE_TIME_BITS64
+         RUST_LIBC_UNSTABLE_LINUX_TIME_BITS64=1 $cmd
+         case "$target" in
+-            # Test with the equivalent of __FILE_OFFSET_BITS=64
+             arm*-gnu*|i*86*-gnu|powerpc-*-gnu*|mips*-gnu|sparc-*-gnu|thumb-*gnu*)
+-                RUST_LIBC_UNSTABLE_GNU_FILE_OFFSET_BITS=64 $cmd;;
++                # Test with the equivalent of _FILE_OFFSET_BITS=64
++                RUST_LIBC_UNSTABLE_GNU_FILE_OFFSET_BITS=64 $cmd
++                # Test with the equivalent of _TIME_BITS=64
++                RUST_LIBC_UNSTABLE_GNU_TIME_BITS=64 $cmd
++                ;;
+         esac
+     fi
+ 
+-- 
+2.43.0
+

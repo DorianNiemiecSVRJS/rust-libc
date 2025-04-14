@@ -1,0 +1,67 @@
+From 37f00731c81c09fb1afb4cb482d8ca94e89c00fd Mon Sep 17 00:00:00 2001
+From: Ola x Nilsson <olani@axis.com>
+Date: Tue, 25 Mar 2025 17:53:22 +0100
+Subject: [PATCH 58/80] gnu: Adapt struct timex for gnu_time_bits64
+
+Refrences:
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/bits/timex.h
+
+(backport <https://github.com/rust-lang/libc/pull/4433>)
+(cherry picked from commit 8d0f97b3818851bfb7a98f6deaf6e67424585611)
+---
+ src/unix/linux_like/linux/gnu/b32/mod.rs | 39 ++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
+
+diff --git a/src/unix/linux_like/linux/gnu/b32/mod.rs b/src/unix/linux_like/linux/gnu/b32/mod.rs
+index 5d2897a2b..614f128de 100644
+--- a/src/unix/linux_like/linux/gnu/b32/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/mod.rs
+@@ -202,6 +202,45 @@ s! {
+         __glibc_reserved4: crate::__syscall_ulong_t,
+     }
+ 
++    #[cfg(gnu_time_bits64)]
++    pub struct timex {
++        pub modes: c_uint,
++        _pad1: c_int,
++        pub offset: c_longlong,
++        pub freq: c_longlong,
++        pub maxerror: c_longlong,
++        pub esterror: c_longlong,
++        pub status: c_int,
++        _pad2: c_int,
++        pub constant: c_longlong,
++        pub precision: c_longlong,
++        pub tolerance: c_longlong,
++        pub time: crate::timeval,
++        pub tick: c_longlong,
++        pub ppsfreq: c_longlong,
++        pub jitter: c_longlong,
++        pub shift: c_int,
++        _pad3: c_int,
++        pub stabil: c_longlong,
++        pub jitcnt: c_longlong,
++        pub calcnt: c_longlong,
++        pub errcnt: c_longlong,
++        pub stbcnt: c_longlong,
++        pub tai: c_int,
++        pub __unused1: i32,
++        pub __unused2: i32,
++        pub __unused3: i32,
++        pub __unused4: i32,
++        pub __unused5: i32,
++        pub __unused6: i32,
++        pub __unused7: i32,
++        pub __unused8: i32,
++        pub __unused9: i32,
++        pub __unused10: i32,
++        pub __unused11: i32,
++    }
++
++    #[cfg(not(gnu_time_bits64))]
+     pub struct timex {
+         pub modes: c_uint,
+         pub offset: c_long,
+-- 
+2.43.0
+

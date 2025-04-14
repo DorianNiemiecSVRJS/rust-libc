@@ -1,0 +1,53 @@
+From b595ed4c20fb0fb63b4ee27c8809217f40a4756f Mon Sep 17 00:00:00 2001
+From: Jeremy Soller <jackpot51@gmail.com>
+Date: Fri, 2 May 2025 09:10:12 -0600
+Subject: [PATCH 16/80] redox: make CMSG_ALIGN, CMSG_LEN, and CMSG_SPACE const
+ functions
+
+(backport <https://github.com/rust-lang/libc/pull/4441>)
+(cherry picked from commit b20a7255ce3d586b9ff3d253e342031504ad5f5c)
+---
+ src/unix/redox/mod.rs | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/src/unix/redox/mod.rs b/src/unix/redox/mod.rs
+index 2e78bc817..c21c156f4 100644
+--- a/src/unix/redox/mod.rs
++++ b/src/unix/redox/mod.rs
+@@ -1014,8 +1014,19 @@ pub const PRIO_PROCESS: c_int = 0;
+ pub const PRIO_PGRP: c_int = 1;
+ pub const PRIO_USER: c_int = 2;
+ 
+-// wait.h
+ f! {
++    //sys/socket.h
++    pub {const} fn CMSG_ALIGN(len: size_t) -> size_t {
++        (len + mem::size_of::<size_t>() - 1) & !(mem::size_of::<size_t>() - 1)
++    }
++    pub {const} fn CMSG_LEN(length: c_uint) -> c_uint {
++        (CMSG_ALIGN(mem::size_of::<cmsghdr>()) + length as usize) as c_uint
++    }
++    pub {const} fn CMSG_SPACE(len: c_uint) -> c_uint {
++        (CMSG_ALIGN(len as size_t) + CMSG_ALIGN(mem::size_of::<cmsghdr>())) as c_uint
++    }
++
++    // wait.h
+     pub fn FD_CLR(fd: c_int, set: *mut fd_set) -> () {
+         let fd = fd as usize;
+         let size = mem::size_of_val(&(*set).fds_bits[0]) * 8;
+@@ -1228,12 +1239,9 @@ extern "C" {
+     pub fn setrlimit(resource: c_int, rlim: *const crate::rlimit) -> c_int;
+ 
+     // sys/socket.h
+-    pub fn CMSG_ALIGN(len: size_t) -> size_t;
+     pub fn CMSG_DATA(cmsg: *const cmsghdr) -> *mut c_uchar;
+     pub fn CMSG_FIRSTHDR(mhdr: *const msghdr) -> *mut cmsghdr;
+-    pub fn CMSG_LEN(len: c_uint) -> c_uint;
+     pub fn CMSG_NXTHDR(mhdr: *const msghdr, cmsg: *const cmsghdr) -> *mut cmsghdr;
+-    pub fn CMSG_SPACE(len: c_uint) -> c_uint;
+     pub fn bind(
+         socket: c_int,
+         address: *const crate::sockaddr,
+-- 
+2.43.0
+

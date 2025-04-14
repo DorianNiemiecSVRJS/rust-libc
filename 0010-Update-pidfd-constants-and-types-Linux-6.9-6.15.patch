@@ -1,0 +1,255 @@
+From 2f3e868594abf2e40f5853354cf1056a0211c7c1 Mon Sep 17 00:00:00 2001
+From: rusty-snake <41237666+rusty-snake@users.noreply.github.com>
+Date: Sat, 12 Apr 2025 13:22:35 +0200
+Subject: [PATCH 10/80] Update pidfd constants and types (Linux 6.9-6.15)
+
+(backport <https://github.com/rust-lang/libc/pull/4402>)
+(cherry picked from commit 126f2c66d23a00f8dfd1d99459fb6a1f9011dfbb)
+---
+ libc-test/build.rs                            | 29 +++++++++++
+ libc-test/semver/linux-musl.txt               |  1 -
+ libc-test/semver/linux.txt                    | 22 +++++++++
+ src/unix/linux_like/linux/gnu/mod.rs          |  1 -
+ src/unix/linux_like/linux/mod.rs              | 48 +++++++++++++++++++
+ src/unix/linux_like/linux/musl/mod.rs         |  2 -
+ src/unix/linux_like/linux/uclibc/arm/mod.rs   |  1 -
+ src/unix/linux_like/linux/uclibc/mips/mod.rs  |  1 -
+ .../linux_like/linux/uclibc/x86_64/mod.rs     |  1 -
+ 9 files changed, 99 insertions(+), 7 deletions(-)
+
+diff --git a/libc-test/build.rs b/libc-test/build.rs
+index 4955e8545..84d707e16 100644
+--- a/libc-test/build.rs
++++ b/libc-test/build.rs
+@@ -4123,6 +4123,10 @@ fn test_linux(target: &str) {
+             // Might differ between kernel versions
+             "open_how" => true,
+ 
++            // Linux >= 6.13 (pidfd_info.exit_code: Linux >= 6.15)
++            // Might differ between kernel versions
++            "pidfd_info" => true,
++
+             "sctp_initmsg" | "sctp_sndrcvinfo" | "sctp_sndinfo" | "sctp_rcvinfo"
+             | "sctp_nxtinfo" | "sctp_prinfo" | "sctp_authinfo" => true,
+ 
+@@ -4229,6 +4233,7 @@ fn test_linux(target: &str) {
+                 || name.starts_with("OPEN_TREE_")
+                 || name.starts_with("P_")
+                 || name.starts_with("PF_")
++                || name.starts_with("PIDFD_")
+                 || name.starts_with("RLIMIT_")
+                 || name.starts_with("RTEXT_FILTER_")
+                 || name.starts_with("SOL_")
+@@ -4432,6 +4437,30 @@ fn test_linux(target: &str) {
+ 
+             // headers conflicts with linux/pidfd.h
+             "PIDFD_NONBLOCK" => true,
++            // Linux >= 6.9
++            "PIDFD_THREAD"
++            | "PIDFD_SIGNAL_THREAD"
++            | "PIDFD_SIGNAL_THREAD_GROUP"
++            | "PIDFD_SIGNAL_PROCESS_GROUP" => true,
++            // Linux >= 6.11
++            "PIDFD_GET_CGROUP_NAMESPACE"
++            | "PIDFD_GET_IPC_NAMESPACE"
++            | "PIDFD_GET_MNT_NAMESPACE"
++            | "PIDFD_GET_NET_NAMESPACE"
++            | "PIDFD_GET_PID_NAMESPACE"
++            | "PIDFD_GET_PID_FOR_CHILDREN_NAMESPACE"
++            | "PIDFD_GET_TIME_NAMESPACE"
++            | "PIDFD_GET_TIME_FOR_CHILDREN_NAMESPACE"
++            | "PIDFD_GET_USER_NAMESPACE"
++            | "PIDFD_GET_UTS_NAMESPACE" => true,
++            // Linux >= 6.13
++            "PIDFD_GET_INFO"
++            | "PIDFD_INFO_PID"
++            | "PIDFD_INFO_CREDS"
++            | "PIDFD_INFO_CGROUPID"
++            | "PIDFD_INFO_SIZE_VER0" => true,
++            // Linux >= 6.15
++            "PIDFD_INFO_EXIT" | "PIDFD_SELF" | "PIDFD_SELF_PROCESS" => true,
+ 
+             // is a private value for kernel usage normally
+             "FUSE_SUPER_MAGIC" => true,
+diff --git a/libc-test/semver/linux-musl.txt b/libc-test/semver/linux-musl.txt
+index e2fdcbf00..462f45f7d 100644
+--- a/libc-test/semver/linux-musl.txt
++++ b/libc-test/semver/linux-musl.txt
+@@ -28,7 +28,6 @@ OLD_TIME
+ PF_IB
+ PF_MPLS
+ PF_XDP
+-PIDFD_NONBLOCK
+ PR_SET_VMA
+ PR_SET_VMA_ANON_NAME
+ RUN_LVL
+diff --git a/libc-test/semver/linux.txt b/libc-test/semver/linux.txt
+index 962c4363e..2c12b1096 100644
+--- a/libc-test/semver/linux.txt
++++ b/libc-test/semver/linux.txt
+@@ -2172,6 +2172,27 @@ PF_WANPIPE
+ PF_WQ_WORKER
+ PF_X
+ PF_X25
++PIDFD_GET_CGROUP_NAMESPACE
++PIDFD_GET_INFO
++PIDFD_GET_IPC_NAMESPACE
++PIDFD_GET_MNT_NAMESPACE
++PIDFD_GET_NET_NAMESPACE
++PIDFD_GET_PID_FOR_CHILDREN_NAMESPACE
++PIDFD_GET_PID_NAMESPACE
++PIDFD_GET_TIME_FOR_CHILDREN_NAMESPACE
++PIDFD_GET_TIME_NAMESPACE
++PIDFD_GET_USER_NAMESPACE
++PIDFD_GET_UTS_NAMESPACE
++PIDFD_INFO_CGROUPID
++PIDFD_INFO_CREDS
++PIDFD_INFO_EXIT
++PIDFD_INFO_PID
++PIDFD_INFO_SIZE_VER0
++PIDFD_NONBLOCK
++PIDFD_SIGNAL_PROCESS_GROUP
++PIDFD_SIGNAL_THREAD
++PIDFD_SIGNAL_THREAD_GROUP
++PIDFD_THREAD
+ PIDTYPE_MAX
+ PIDTYPE_PGID
+ PIDTYPE_PID
+@@ -4045,6 +4066,7 @@ pause
+ personality
+ pgn_t
+ pid_type
++pidfd_info
+ pipe2
+ popen
+ posix_fadvise
+diff --git a/src/unix/linux_like/linux/gnu/mod.rs b/src/unix/linux_like/linux/gnu/mod.rs
+index 823f49508..84d7c2474 100644
+--- a/src/unix/linux_like/linux/gnu/mod.rs
++++ b/src/unix/linux_like/linux/gnu/mod.rs
+@@ -751,7 +751,6 @@ pub const RTLD_DI_TLS_MODID: c_int = 9;
+ pub const RTLD_DI_TLS_DATA: c_int = 10;
+ 
+ pub const SOCK_NONBLOCK: c_int = O_NONBLOCK;
+-pub const PIDFD_NONBLOCK: c_uint = O_NONBLOCK as c_uint;
+ 
+ pub const SOL_RXRPC: c_int = 272;
+ pub const SOL_PPPOL2TP: c_int = 273;
+diff --git a/src/unix/linux_like/linux/mod.rs b/src/unix/linux_like/linux/mod.rs
+index ade7311d7..367bfb61b 100644
+--- a/src/unix/linux_like/linux/mod.rs
++++ b/src/unix/linux_like/linux/mod.rs
+@@ -1376,6 +1376,25 @@ s! {
+         pub userns_fd: crate::__u64,
+     }
+ 
++    // linux/pidfd.h
++
++    pub struct pidfd_info {
++        mask: crate::__u64,
++        cgroupid: crate::__u64,
++        pid: crate::__u32,
++        tgid: crate::__u32,
++        ppid: crate::__u32,
++        ruid: crate::__u32,
++        rgid: crate::__u32,
++        euid: crate::__u32,
++        egid: crate::__u32,
++        suid: crate::__u32,
++        sgid: crate::__u32,
++        fsuid: crate::__u32,
++        fsgid: crate::__u32,
++        exit_code: crate::__s32,
++    }
++
+     // linux/uio.h
+ 
+     pub struct dmabuf_cmsg {
+@@ -3192,6 +3211,35 @@ pub const MREMAP_MAYMOVE: c_int = 1;
+ pub const MREMAP_FIXED: c_int = 2;
+ pub const MREMAP_DONTUNMAP: c_int = 4;
+ 
++// linux/pidfd.h
++pub const PIDFD_NONBLOCK: c_uint = O_NONBLOCK as c_uint;
++pub const PIDFD_THREAD: c_uint = O_EXCL as c_uint;
++
++pub const PIDFD_SIGNAL_THREAD: c_uint = 1 << 0;
++pub const PIDFD_SIGNAL_THREAD_GROUP: c_uint = 1 << 1;
++pub const PIDFD_SIGNAL_PROCESS_GROUP: c_uint = 1 << 2;
++
++pub const PIDFD_INFO_PID: c_uint = 1 << 0;
++pub const PIDFD_INFO_CREDS: c_uint = 1 << 1;
++pub const PIDFD_INFO_CGROUPID: c_uint = 1 << 2;
++pub const PIDFD_INFO_EXIT: c_uint = 1 << 3;
++
++pub const PIDFD_INFO_SIZE_VER0: c_uint = 64;
++
++const PIDFS_IOCTL_MAGIC: c_uint = 0xFF;
++pub const PIDFD_GET_CGROUP_NAMESPACE: c_uint = _IO(PIDFS_IOCTL_MAGIC, 1);
++pub const PIDFD_GET_IPC_NAMESPACE: c_uint = _IO(PIDFS_IOCTL_MAGIC, 2);
++pub const PIDFD_GET_MNT_NAMESPACE: c_uint = _IO(PIDFS_IOCTL_MAGIC, 3);
++pub const PIDFD_GET_NET_NAMESPACE: c_uint = _IO(PIDFS_IOCTL_MAGIC, 4);
++pub const PIDFD_GET_PID_NAMESPACE: c_uint = _IO(PIDFS_IOCTL_MAGIC, 5);
++pub const PIDFD_GET_PID_FOR_CHILDREN_NAMESPACE: c_uint = _IO(PIDFS_IOCTL_MAGIC, 6);
++pub const PIDFD_GET_TIME_NAMESPACE: c_uint = _IO(PIDFS_IOCTL_MAGIC, 7);
++pub const PIDFD_GET_TIME_FOR_CHILDREN_NAMESPACE: c_uint = _IO(PIDFS_IOCTL_MAGIC, 8);
++pub const PIDFD_GET_USER_NAMESPACE: c_uint = _IO(PIDFS_IOCTL_MAGIC, 9);
++pub const PIDFD_GET_UTS_NAMESPACE: c_uint = _IO(PIDFS_IOCTL_MAGIC, 10);
++pub const PIDFD_GET_INFO: c_uint = _IOWR::<pidfd_info>(PIDFS_IOCTL_MAGIC, 11);
++
++// linux/prctl.h
+ pub const PR_SET_PDEATHSIG: c_int = 1;
+ pub const PR_GET_PDEATHSIG: c_int = 2;
+ 
+diff --git a/src/unix/linux_like/linux/musl/mod.rs b/src/unix/linux_like/linux/musl/mod.rs
+index f850849b2..5d4d97faf 100644
+--- a/src/unix/linux_like/linux/musl/mod.rs
++++ b/src/unix/linux_like/linux/musl/mod.rs
+@@ -787,8 +787,6 @@ pub const EFD_NONBLOCK: c_int = crate::O_NONBLOCK;
+ 
+ pub const SFD_NONBLOCK: c_int = crate::O_NONBLOCK;
+ 
+-pub const PIDFD_NONBLOCK: c_uint = O_NONBLOCK as c_uint;
+-
+ pub const TCSANOW: c_int = 0;
+ pub const TCSADRAIN: c_int = 1;
+ pub const TCSAFLUSH: c_int = 2;
+diff --git a/src/unix/linux_like/linux/uclibc/arm/mod.rs b/src/unix/linux_like/linux/uclibc/arm/mod.rs
+index 634161ed6..7a517f497 100644
+--- a/src/unix/linux_like/linux/uclibc/arm/mod.rs
++++ b/src/unix/linux_like/linux/uclibc/arm/mod.rs
+@@ -475,7 +475,6 @@ pub const POLLWRBAND: c_short = 0x200;
+ pub const POLLWRNORM: c_short = 0x100;
+ pub const PTHREAD_STACK_MIN: size_t = 16384;
+ pub const RTLD_GLOBAL: c_int = 0x00100;
+-pub const PIDFD_NONBLOCK: c_int = 0x800;
+ 
+ // These are typed unsigned to match sigaction
+ pub const SA_NOCLDSTOP: c_ulong = 0x1;
+diff --git a/src/unix/linux_like/linux/uclibc/mips/mod.rs b/src/unix/linux_like/linux/uclibc/mips/mod.rs
+index f1934c396..0ad572a95 100644
+--- a/src/unix/linux_like/linux/uclibc/mips/mod.rs
++++ b/src/unix/linux_like/linux/uclibc/mips/mod.rs
+@@ -57,7 +57,6 @@ pub const O_LARGEFILE: c_int = 0x2000;
+ pub const O_NDELAY: c_int = 0x80;
+ 
+ pub const SOCK_NONBLOCK: c_int = 128;
+-pub const PIDFD_NONBLOCK: c_int = 128;
+ 
+ pub const EDEADLK: c_int = 45;
+ pub const ENAMETOOLONG: c_int = 78;
+diff --git a/src/unix/linux_like/linux/uclibc/x86_64/mod.rs b/src/unix/linux_like/linux/uclibc/x86_64/mod.rs
+index 3a4ee0dee..4a6c19fc9 100644
+--- a/src/unix/linux_like/linux/uclibc/x86_64/mod.rs
++++ b/src/unix/linux_like/linux/uclibc/x86_64/mod.rs
+@@ -342,7 +342,6 @@ pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 56;
+ pub const __SIZEOF_PTHREAD_RWLOCKATTR_T: usize = 8;
+ pub const __SIZEOF_PTHREAD_BARRIER_T: usize = 32;
+ pub const __SIZEOF_PTHREAD_BARRIERATTR_T: usize = 4;
+-pub const PIDFD_NONBLOCK: c_int = 0o4000;
+ 
+ cfg_if! {
+     if #[cfg(target_os = "l4re")] {
+-- 
+2.43.0
+

@@ -1,0 +1,47 @@
+From 2a04153cdaf5b620d0a726938b3acde0a0834a3c Mon Sep 17 00:00:00 2001
+From: Trevor Gross <tmgross@umich.edu>
+Date: Mon, 2 Jun 2025 00:50:12 +0000
+Subject: [PATCH 65/80] ci: Disable the i686 Android job
+
+This job has been failing a lot due to failures installing packages:
+
+     > [ 5/13] RUN apt-get install -y --no-install-recommends   file   wget   ca-certificates   python3   unzip   expect   openjdk-8-jre   libstdc++6:i386   libpulse0:
+    8.400 E: Failed to fetch http://archive.ubuntu.com/ubuntu/pool/main/libx/libxcb/libxcb-randr0_1.17.0-2_amd64.deb  403  Forbidden [IP: 185.125.190.82 80]
+    8.400 E: Failed to fetch http://archive.ubuntu.com/ubuntu/pool/main/libx/libxcb/libxcb-shm0_1.17.0-2_amd64.deb  403  Forbidden [IP: 185.125.190.82 80]
+    8.400 E: Failed to fetch http://archive.ubuntu.com/ubuntu/pool/main/libx/libxcb/libxcb-sync1_1.17.0-2_amd64.deb  403  Forbidden [IP: 185.125.190.82 80]
+    8.400 E: Failed to fetch http://archive.ubuntu.com/ubuntu/pool/main/libx/libxcb/libxcb-xfixes0_1.17.0-2_amd64.deb  403  Forbidden [IP: 185.125.190.82 80]
+    8.400 E: Failed to fetch http://archive.ubuntu.com/ubuntu/pool/main/libx/libxfixes/libxfixes3_6.0.0-2build1_amd64.deb  403  Forbidden [IP: 185.125.190.82 80]
+    8.400 E: Failed to fetch http://archive.ubuntu.com/ubuntu/pool/main/libx/libxshmfence/libxshmfence1_1.3-1build5_amd64.deb  403  Forbidden [IP: 185.125.190.82 80]
+    8.400 E: Failed to fetch http://archive.ubuntu.com/ubuntu/pool/main/libx/libxxf86vm/libxxf86vm1_1.1.4-1build4_amd64.deb  403  Forbidden [IP: 185.125.190.82 80]
+    8.400 E: Failed to fetch http://archive.ubuntu.com/ubuntu/pool/main/libd/libdrm/libdrm-amdgpu1_2.4.122-1_amd64.deb  403  Forbidden [IP: 185.125.190.82 80]
+    8.400 E: Failed to fetch http://archive.ubuntu.com/ubuntu/pool/main/libp/libpciaccess/libpciaccess0_0.17-3build1_amd64.deb  403  Forbidden [IP: 185.125.190.82 80]
+    8.400 E: Unable to fetch some archives, maybe run apt-get update or try with --fix-missing?
+
+Assume that this is a temporary problem on the repository side and
+disable the job for now.
+
+Issue regarding Android CI: https://github.com/rust-lang/libc/issues/4297
+
+(backport <https://github.com/rust-lang/libc/pull/4470>)
+(cherry picked from commit eba1e9da88fd5a9aa5462c541f8486b3d5fddd75)
+---
+ .github/workflows/ci.yaml | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/.github/workflows/ci.yaml b/.github/workflows/ci.yaml
+index 97abaef3f..41bbd9970 100644
+--- a/.github/workflows/ci.yaml
++++ b/.github/workflows/ci.yaml
+@@ -178,7 +178,8 @@ jobs:
+           - aarch64-unknown-linux-musl
+           - arm-linux-androideabi
+           - arm-unknown-linux-musleabihf
+-          - i686-linux-android
++          # FIXME(#4297): Disabled due to spurious failueSome android jobs are disabled because of high rates of
++          # - i686-linux-android
+           - i686-unknown-linux-musl
+           - loongarch64-unknown-linux-gnu
+           - loongarch64-unknown-linux-musl
+-- 
+2.43.0
+

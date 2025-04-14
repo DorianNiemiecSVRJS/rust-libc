@@ -1,0 +1,67 @@
+From a066096ec006e1f68c8aa5c6bb5ccf20c7119329 Mon Sep 17 00:00:00 2001
+From: Reagan Bohan <xbjfk.github@gmail.com>
+Date: Sat, 3 May 2025 13:09:41 +0000
+Subject: [PATCH 37/80] musl: aarch64: update type of ipc_perm->__seq to match
+ upstream
+
+The architecture-specific definitions was removed in upstream commit
+319b2d0, changing the type to the generic definition of int.
+
+(backport <https://github.com/rust-lang/libc/pull/4443>)
+(cherry picked from commit 3f911737768f78469952fe2604b38f4bc52374e1)
+---
+ libc-test/build.rs                                |  5 ++---
+ src/unix/linux_like/linux/musl/b64/aarch64/mod.rs | 13 +++++++++++--
+ 2 files changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/libc-test/build.rs b/libc-test/build.rs
+index 351c0cc11..39adfd281 100644
+--- a/libc-test/build.rs
++++ b/libc-test/build.rs
+@@ -3722,7 +3722,6 @@ fn test_linux(target: &str) {
+     let x32 = target.contains("x32");
+     let x86_32 = target.contains("i686");
+     let x86_64 = target.contains("x86_64");
+-    let aarch64_musl = aarch64 && musl;
+     let gnueabihf = target.contains("gnueabihf");
+     let x86_64_gnux32 = target.contains("gnux32") && x86_64;
+     let riscv64 = target.contains("riscv64");
+@@ -4856,8 +4855,8 @@ fn test_linux(target: &str) {
+             "sched_ss_init_budget",
+             "sched_ss_max_repl",
+         ].contains(&field) && musl) ||
+-        // FIXME(musl): After musl 1.1.24, the type becomes `int` instead of `unsigned short`.
+-        (struct_ == "ipc_perm" && field == "__seq" && aarch64_musl) ||
++        // After musl 1.1.24, the type becomes `int` instead of `unsigned short`.
++        (struct_ == "ipc_perm" && field == "__seq" && old_musl && aarch64) ||
+         // glibc uses unnamed fields here and Rust doesn't support that yet
+         (struct_ == "timex" && field.starts_with("__unused")) ||
+         // FIXME(linux): It now takes mode_t since glibc 2.31 on some targets.
+diff --git a/src/unix/linux_like/linux/musl/b64/aarch64/mod.rs b/src/unix/linux_like/linux/musl/b64/aarch64/mod.rs
+index aca96f2ec..243247eda 100644
+--- a/src/unix/linux_like/linux/musl/b64/aarch64/mod.rs
++++ b/src/unix/linux_like/linux/musl/b64/aarch64/mod.rs
+@@ -74,9 +74,18 @@ s! {
+         pub cuid: crate::uid_t,
+         pub cgid: crate::gid_t,
+         pub mode: crate::mode_t,
++
++        #[cfg(musl_v1_2_3)]
++        pub __seq: c_int,
++        #[cfg(not(musl_v1_2_3))]
++        #[deprecated(
++            since = "0.2.173",
++            note = "The type of this field has changed from c_ushort to c_int,
++                we'll follow that change in the future release."
++        )]
+         pub __seq: c_ushort,
+-        __unused1: c_ulong,
+-        __unused2: c_ulong,
++        __unused1: c_long,
++        __unused2: c_long,
+     }
+ 
+     pub struct ucontext_t {
+-- 
+2.43.0
+

@@ -1,0 +1,63 @@
+From dfcfcf847ffcf381f5e962f84ac2ef549cb2d60f Mon Sep 17 00:00:00 2001
+From: Ola x Nilsson <olani@axis.com>
+Date: Mon, 27 Mar 2023 14:17:19 +0200
+Subject: [PATCH 56/80] gnu: Update struct timespec for GNU _TIME_BITS=64
+
+Use a GNU libc specific version of struct timespec in
+unix/linux_like/linux/gnu and keep the version in unix for all other
+unix libc's.
+
+Big-endian platforms wants 32 bits of padding before tv_nsec,
+little-endian after.
+
+GNU libc always uses long for tv_nsec.
+
+References:
+
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/time/bits/types/struct_timespec.h
+
+(backport <https://github.com/rust-lang/libc/pull/4433>)
+(cherry picked from commit bbaa0173daa439f55e6fabfd71982fc579bb3e8c)
+---
+ src/unix/linux_like/linux/gnu/mod.rs | 12 ++++++++++++
+ src/unix/mod.rs                      |  1 +
+ 2 files changed, 13 insertions(+)
+
+diff --git a/src/unix/linux_like/linux/gnu/mod.rs b/src/unix/linux_like/linux/gnu/mod.rs
+index bf739d6f6..0c5a74b34 100644
+--- a/src/unix/linux_like/linux/gnu/mod.rs
++++ b/src/unix/linux_like/linux/gnu/mod.rs
+@@ -436,6 +436,18 @@ s! {
+         __pos: off64_t,
+         __state: crate::mbstate_t,
+     }
++
++    // linux x32 compatibility
++    // See https://sourceware.org/bugzilla/show_bug.cgi?id=16437
++    pub struct timespec {
++        pub tv_sec: time_t,
++        #[cfg(all(gnu_time_bits64, target_endian = "big"))]
++        __pad: i32,
++        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
++        pub tv_nsec: c_long,
++        #[cfg(all(gnu_time_bits64, target_endian = "little"))]
++        __pad: i32,
++    }
+ }
+ 
+ impl siginfo_t {
+diff --git a/src/unix/mod.rs b/src/unix/mod.rs
+index ff521747b..b8742e006 100644
+--- a/src/unix/mod.rs
++++ b/src/unix/mod.rs
+@@ -64,6 +64,7 @@ s! {
+ 
+     // linux x32 compatibility
+     // See https://sourceware.org/bugzilla/show_bug.cgi?id=16437
++    #[cfg(not(target_env = "gnu"))]
+     pub struct timespec {
+         pub tv_sec: time_t,
+         #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+-- 
+2.43.0
+

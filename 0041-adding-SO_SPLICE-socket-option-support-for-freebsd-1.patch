@@ -1,0 +1,89 @@
+From 40c1f316ce01031cdd967a065a1c2e4bcde046e4 Mon Sep 17 00:00:00 2001
+From: David Carlier <devnexen@gmail.com>
+Date: Sat, 10 May 2025 22:53:18 +0000
+Subject: [PATCH 41/80] adding SO_SPLICE socket option support for freebsd >=
+ 14.2
+
+[ref](https://github.com/freebsd/freebsd-src/blob/d3f15bc2a51d1822795135d9ad4627dc1c7f2b18/sys/sys/socket.h#L175) and
+[ref](https://github.com/freebsd/freebsd-src/blob/d3f15bc2a51d1822795135d9ad4627dc1c7f2b18/sys/sys/socketvar.h#L76)
+
+(backport <https://github.com/rust-lang/libc/pull/4451>)
+(cherry picked from commit 47ac2e75f172de447f3c1205c63ac6afaacd61de)
+---
+ libc-test/build.rs                      | 6 ++++++
+ libc-test/semver/freebsd.txt            | 2 ++
+ src/unix/bsd/freebsdlike/freebsd/mod.rs | 7 +++++++
+ 3 files changed, 15 insertions(+)
+
+diff --git a/libc-test/build.rs b/libc-test/build.rs
+index c0b051707..4efc1ff7a 100644
+--- a/libc-test/build.rs
++++ b/libc-test/build.rs
+@@ -2853,6 +2853,9 @@ fn test_freebsd(target: &str) {
+             // FIXME(freebsd): Removed in FreeBSD 15, deprecated in libc
+             "TCP_PCAP_OUT" | "TCP_PCAP_IN" => true,
+ 
++            // Added in FreeBSD 14.2
++            "SO_SPLICE" if Some(14) > freebsd_ver => true,
++
+             _ => false,
+         }
+     });
+@@ -2904,6 +2907,9 @@ fn test_freebsd(target: &str) {
+             // FIXME(freebsd): Changed in FreeBSD 15
+             "tcp_info" | "sockstat" if Some(15) >= freebsd_ver => true,
+ 
++            // `splice` introduced in FreeBSD 14.2
++            "splice" if Some(14) > freebsd_ver => true,
++
+             _ => false,
+         }
+     });
+diff --git a/libc-test/semver/freebsd.txt b/libc-test/semver/freebsd.txt
+index 96b4c19b5..d0b643232 100644
+--- a/libc-test/semver/freebsd.txt
++++ b/libc-test/semver/freebsd.txt
+@@ -1466,6 +1466,7 @@ SO_PROTOTYPE
+ SO_REUSEPORT
+ SO_REUSEPORT_LB
+ SO_SETFIB
++SO_SPLICE
+ SO_TIMESTAMP
+ SO_TS_BINTIME
+ SO_TS_CLOCK
+@@ -2360,6 +2361,7 @@ sigwait
+ sigwaitinfo
+ sockaddr_dl
+ sockcred
++splice
+ srand
+ srand48
+ stack_t
+diff --git a/src/unix/bsd/freebsdlike/freebsd/mod.rs b/src/unix/bsd/freebsdlike/freebsd/mod.rs
+index 7d6b876d6..c88967e6f 100644
+--- a/src/unix/bsd/freebsdlike/freebsd/mod.rs
++++ b/src/unix/bsd/freebsdlike/freebsd/mod.rs
+@@ -1398,6 +1398,12 @@ s! {
+         tqh_first: *mut c_void,
+         tqh_last: *mut *mut c_void,
+     }
++
++    pub struct splice {
++        pub sp_fd: c_int,
++        pub sp_max: off_t,
++        pub sp_idle: crate::timeval,
++    }
+ }
+ 
+ s_no_extra_traits! {
+@@ -3193,6 +3199,7 @@ pub const SO_PROTOCOL: c_int = 0x1016;
+ pub const SO_PROTOTYPE: c_int = SO_PROTOCOL;
+ pub const SO_TS_CLOCK: c_int = 0x1017;
+ pub const SO_DOMAIN: c_int = 0x1019;
++pub const SO_SPLICE: c_int = 0x1023;
+ pub const SO_VENDOR: c_int = 0x80000000;
+ 
+ pub const SO_TS_REALTIME_MICRO: c_int = 0;
+-- 
+2.43.0
+

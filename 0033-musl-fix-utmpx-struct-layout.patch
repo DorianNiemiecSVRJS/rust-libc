@@ -1,0 +1,122 @@
+From d63132d42ce8428b442d28e7afd0eb15813cffb6 Mon Sep 17 00:00:00 2001
+From: Reagan Bohan <xbjfk.github@gmail.com>
+Date: Sat, 3 May 2025 11:27:09 +0000
+Subject: [PATCH 33/80] musl: fix utmpx struct layout
+
+This ut_session has changed from long to int + padding in newer
+versions. This was already reflected on loongarch64 and ohos - this
+commit adds this change, and re-enables the test when musl_v1_2_3 is
+set.
+
+Co-authored-by: Ariadne Conill <ariadne@dereferenced.org>
+
+(backport <https://github.com/rust-lang/libc/pull/4443>)
+(cherry picked from commit 1038c7f1f4dbd6a39b867263dc5478806744f5a0)
+---
+ libc-test/build.rs                    |  4 +--
+ src/unix/linux_like/linux/musl/mod.rs | 39 ++++++++++-----------------
+ 2 files changed, 16 insertions(+), 27 deletions(-)
+
+diff --git a/libc-test/build.rs b/libc-test/build.rs
+index e75f10060..9506da357 100644
+--- a/libc-test/build.rs
++++ b/libc-test/build.rs
+@@ -4897,8 +4897,8 @@ fn test_linux(target: &str) {
+         (struct_ == "statvfs64" && field == "__f_spare") ||
+         // the `xsk_tx_metadata_union` field is an anonymous union
+         (struct_ == "xsk_tx_metadata" && field == "xsk_tx_metadata_union") ||
+-        // FIXME(musl): After musl 1.2.0, the type becomes `int` instead of `long`.
+-        (struct_ == "utmpx" && field == "ut_session")
++        // After musl 1.2.0, the type becomes `int` instead of `long`.
++        (old_musl && struct_ == "utmpx" && field == "ut_session")
+     });
+ 
+     cfg.skip_roundtrip(move |s| match s {
+diff --git a/src/unix/linux_like/linux/musl/mod.rs b/src/unix/linux_like/linux/musl/mod.rs
+index 5d4d97faf..efab9deaf 100644
+--- a/src/unix/linux_like/linux/musl/mod.rs
++++ b/src/unix/linux_like/linux/musl/mod.rs
+@@ -438,13 +438,6 @@ s_no_extra_traits! {
+         pub __reserved: [c_char; 256],
+     }
+ 
+-    // FIXME(musl): musl added paddings and adjusted
+-    // layout in 1.2.0 but our CI is still 1.1.24.
+-    // So, I'm leaving some fields as cfg for now.
+-    // ref. https://github.com/bminor/musl/commit/
+-    // 1e7f0fcd7ff2096904fd93a2ee6d12a2392be392
+-    //
+-    // OpenHarmony uses the musl 1.2 layout.
+     pub struct utmpx {
+         pub ut_type: c_short,
+         __ut_pad1: c_short,
+@@ -455,31 +448,24 @@ s_no_extra_traits! {
+         pub ut_host: [c_char; 256],
+         pub ut_exit: __exit_status,
+ 
+-        #[cfg(target_env = "musl")]
+-        #[cfg(not(target_arch = "loongarch64"))]
++        #[cfg(not(musl_v1_2_3))]
++        #[deprecated(
++            since = "0.2.173",
++            note = "The ABI of this field has changed from c_long to c_int with padding, \
++                we'll follow that change in the future release. See #4443 for more info."
++        )]
+         pub ut_session: c_long,
+ 
+-        #[cfg(target_env = "musl")]
+-        #[cfg(target_arch = "loongarch64")]
+-        pub ut_session: c_int,
+-
+-        #[cfg(target_env = "musl")]
+-        #[cfg(target_arch = "loongarch64")]
++        #[cfg(musl_v1_2_3)]
++        #[cfg(not(target_endian = "little"))]
+         __ut_pad2: c_int,
+ 
+-        #[cfg(target_env = "ohos")]
+-        #[cfg(target_endian = "little")]
++        #[cfg(musl_v1_2_3)]
+         pub ut_session: c_int,
+-        #[cfg(target_env = "ohos")]
+-        #[cfg(target_endian = "little")]
+-        __ut_pad2: c_int,
+ 
+-        #[cfg(target_env = "ohos")]
+-        #[cfg(not(target_endian = "little"))]
++        #[cfg(musl_v1_2_3)]
++        #[cfg(target_endian = "little")]
+         __ut_pad2: c_int,
+-        #[cfg(target_env = "ohos")]
+-        #[cfg(not(target_endian = "little"))]
+-        pub ut_session: c_int,
+ 
+         pub ut_tv: crate::timeval,
+         pub ut_addr_v6: [c_uint; 4],
+@@ -555,6 +541,7 @@ cfg_if! {
+         }
+ 
+         impl PartialEq for utmpx {
++            #[allow(deprecated)]
+             fn eq(&self, other: &utmpx) -> bool {
+                 self.ut_type == other.ut_type
+                     //&& self.__ut_pad1 == other.__ut_pad1
+@@ -579,6 +566,7 @@ cfg_if! {
+         impl Eq for utmpx {}
+ 
+         impl fmt::Debug for utmpx {
++            #[allow(deprecated)]
+             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                 f.debug_struct("utmpx")
+                     .field("ut_type", &self.ut_type)
+@@ -599,6 +587,7 @@ cfg_if! {
+         }
+ 
+         impl hash::Hash for utmpx {
++            #[allow(deprecated)]
+             fn hash<H: hash::Hasher>(&self, state: &mut H) {
+                 self.ut_type.hash(state);
+                 //self.__ut_pad1.hash(state);
+-- 
+2.43.0
+

@@ -1,0 +1,79 @@
+From 70dcf6da22c6d9d5488761dbb75a3e3e46417d5a Mon Sep 17 00:00:00 2001
+From: Ola x Nilsson <olani@axis.com>
+Date: Mon, 20 Mar 2023 14:29:55 +0100
+Subject: [PATCH 55/80] gnu: Update struct semid_ds for 64-bit time
+
+References:
+
+Common definition for _TIME_BITS=64
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/bits/types/struct_semid64_ds_helper.h
+
+Generic implementation used by arm:
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/bits/types/struct_semid_ds.h
+
+x86:
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/x86/bits/types/struct_semid_ds.h
+
+PowerPC:
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/powerpc/bits/types/struct_semid_ds.h
+
+MIPS:
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/mips/bits/types/struct_semid_ds.h
+
+SPARC:
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/sysdeps/unix/sysv/linux/sparc/bits/types/struct_semid_ds.h
+
+(backport <https://github.com/rust-lang/libc/pull/4433>)
+(cherry picked from commit a05a91cf87519c196ec4705481aec378e8f909d2)
+---
+ src/unix/linux_like/linux/gnu/b32/mod.rs | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/src/unix/linux_like/linux/gnu/b32/mod.rs b/src/unix/linux_like/linux/gnu/b32/mod.rs
+index 67737d684..56bc9c01b 100644
+--- a/src/unix/linux_like/linux/gnu/b32/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/mod.rs
+@@ -166,25 +166,38 @@ s! {
+ 
+     pub struct semid_ds {
+         pub sem_perm: ipc_perm,
+-        #[cfg(target_arch = "powerpc")]
++        #[cfg(all(not(gnu_time_bits64), target_arch = "powerpc"))]
+         __reserved: crate::__syscall_ulong_t,
+         pub sem_otime: crate::time_t,
+         #[cfg(not(any(
++            gnu_time_bits64,
+             target_arch = "mips",
+             target_arch = "mips32r6",
+             target_arch = "powerpc"
+         )))]
+         __reserved: crate::__syscall_ulong_t,
+-        #[cfg(target_arch = "powerpc")]
++        #[cfg(all(not(gnu_time_bits64), target_arch = "powerpc"))]
+         __reserved2: crate::__syscall_ulong_t,
+         pub sem_ctime: crate::time_t,
+         #[cfg(not(any(
++            gnu_time_bits64,
+             target_arch = "mips",
+             target_arch = "mips32r6",
+             target_arch = "powerpc"
+         )))]
+         __reserved2: crate::__syscall_ulong_t,
+         pub sem_nsems: crate::__syscall_ulong_t,
++        #[cfg(all(
++            gnu_time_bits64,
++            not(any(
++                target_arch = "mips",
++                target_arch = "mips32r6",
++                target_arch = "powerpc",
++                target_arch = "arm",
++                target_arch = "x86"
++            ))
++        ))]
++        __reserved2: crate::__syscall_ulong_t,
+         __glibc_reserved3: crate::__syscall_ulong_t,
+         __glibc_reserved4: crate::__syscall_ulong_t,
+     }
+-- 
+2.43.0
+

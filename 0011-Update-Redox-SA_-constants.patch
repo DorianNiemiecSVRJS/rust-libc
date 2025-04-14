@@ -1,0 +1,41 @@
+From 859a8fa7400a3ed9a739152641f31f27e71ed73f Mon Sep 17 00:00:00 2001
+From: 4lDO2 <4lDO2@protonmail.com>
+Date: Mon, 21 Apr 2025 21:22:12 +0200
+Subject: [PATCH 11/80] Update Redox SA_ constants.
+
+(backport <https://github.com/rust-lang/libc/pull/4426>)
+(cherry picked from commit 74c3cc02540e72656ec340ac4bb043b21804b059)
+---
+ src/unix/redox/mod.rs | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/src/unix/redox/mod.rs b/src/unix/redox/mod.rs
+index 15b8da6fa..2e78bc817 100644
+--- a/src/unix/redox/mod.rs
++++ b/src/unix/redox/mod.rs
+@@ -661,14 +661,14 @@ pub const SIGPWR: c_int = 30;
+ pub const SIGSYS: c_int = 31;
+ pub const NSIG: c_int = 32;
+ 
+-pub const SA_NOCLDSTOP: c_ulong = 0x00000001;
+-pub const SA_NOCLDWAIT: c_ulong = 0x00000002;
+-pub const SA_SIGINFO: c_ulong = 0x00000004;
+-pub const SA_RESTORER: c_ulong = 0x04000000;
+-pub const SA_ONSTACK: c_ulong = 0x08000000;
+-pub const SA_RESTART: c_ulong = 0x10000000;
+-pub const SA_NODEFER: c_ulong = 0x40000000;
+-pub const SA_RESETHAND: c_ulong = 0x80000000;
++pub const SA_NOCLDWAIT: c_ulong = 0x0000_0002;
++pub const SA_RESTORER: c_ulong = 0x0000_0004; // FIXME(redox): remove after relibc removes it
++pub const SA_SIGINFO: c_ulong = 0x0200_0000;
++pub const SA_ONSTACK: c_ulong = 0x0400_0000;
++pub const SA_RESTART: c_ulong = 0x0800_0000;
++pub const SA_NODEFER: c_ulong = 0x1000_0000;
++pub const SA_RESETHAND: c_ulong = 0x2000_0000;
++pub const SA_NOCLDSTOP: c_ulong = 0x4000_0000;
+ 
+ // sys/file.h
+ pub const LOCK_SH: c_int = 1;
+-- 
+2.43.0
+

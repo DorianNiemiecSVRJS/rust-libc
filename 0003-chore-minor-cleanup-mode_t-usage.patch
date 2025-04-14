@@ -1,0 +1,976 @@
+From 66b5875936caf1805a1e23b90f0b38f1797d0157 Mon Sep 17 00:00:00 2001
+From: Yuri Astrakhan <YuriAstrakhan@gmail.com>
+Date: Sun, 13 Apr 2025 22:41:59 -0400
+Subject: [PATCH 03/80] chore: minor cleanup `mode_t` usage
+
+`crate::mode_t` is almost never needed because it is part of prelude.  Moreover, in many cases `mode_t` was already used without the prefix - thus confusing if they are different or not. Keeping it the same helps readability.
+
+(backport <https://github.com/rust-lang/libc/pull/4405>)
+[ Resolve conflict around vxworks S_* constants - Trevor ]
+(cherry picked from commit 1984cc22406f45cae7d6c6e2a1d1bc3faa6dc3e8)
+---
+ src/fuchsia/mod.rs                    | 62 ++++++++++++--------------
+ src/unix/aix/mod.rs                   |  9 ++--
+ src/unix/bsd/apple/mod.rs             |  9 ++--
+ src/unix/bsd/freebsdlike/mod.rs       | 11 +++--
+ src/unix/bsd/netbsdlike/mod.rs        | 11 +++--
+ src/unix/haiku/mod.rs                 | 53 +++++++++++-----------
+ src/unix/hurd/mod.rs                  | 63 +++++++++++++--------------
+ src/unix/linux_like/android/mod.rs    | 13 ++++--
+ src/unix/linux_like/emscripten/mod.rs |  6 +--
+ src/unix/linux_like/linux/mod.rs      |  4 +-
+ src/unix/linux_like/mod.rs            | 43 +++++++++---------
+ src/unix/mod.rs                       | 17 +++-----
+ src/unix/newlib/mod.rs                | 44 +++++++++----------
+ src/unix/nto/mod.rs                   | 57 +++++++++++-------------
+ src/unix/redox/mod.rs                 | 16 ++-----
+ src/unix/solarish/mod.rs              | 13 +++---
+ src/vxworks/mod.rs                    | 10 ++---
+ src/wasi/mod.rs                       |  2 +-
+ 18 files changed, 207 insertions(+), 236 deletions(-)
+
+diff --git a/src/fuchsia/mod.rs b/src/fuchsia/mod.rs
+index b60201791..f065eaa3a 100644
+--- a/src/fuchsia/mod.rs
++++ b/src/fuchsia/mod.rs
+@@ -1452,9 +1452,9 @@ pub const GRPQUOTA: c_int = 1;
+ 
+ pub const SIGIOT: c_int = 6;
+ 
+-pub const S_ISUID: crate::mode_t = 0o4000;
+-pub const S_ISGID: crate::mode_t = 0o2000;
+-pub const S_ISVTX: crate::mode_t = 0o1000;
++pub const S_ISUID: mode_t = 0o4000;
++pub const S_ISGID: mode_t = 0o2000;
++pub const S_ISVTX: mode_t = 0o1000;
+ 
+ pub const IF_NAMESIZE: size_t = 16;
+ pub const IFNAMSIZ: size_t = IF_NAMESIZE;
+@@ -1585,26 +1585,26 @@ pub const O_RDONLY: c_int = 0;
+ pub const O_WRONLY: c_int = 1;
+ pub const O_RDWR: c_int = 2;
+ 
+-pub const S_IFIFO: crate::mode_t = 0o1_0000;
+-pub const S_IFCHR: crate::mode_t = 0o2_0000;
+-pub const S_IFBLK: crate::mode_t = 0o6_0000;
+-pub const S_IFDIR: crate::mode_t = 0o4_0000;
+-pub const S_IFREG: crate::mode_t = 0o10_0000;
+-pub const S_IFLNK: crate::mode_t = 0o12_0000;
+-pub const S_IFSOCK: crate::mode_t = 0o14_0000;
+-pub const S_IFMT: crate::mode_t = 0o17_0000;
+-pub const S_IRWXU: crate::mode_t = 0o0700;
+-pub const S_IXUSR: crate::mode_t = 0o0100;
+-pub const S_IWUSR: crate::mode_t = 0o0200;
+-pub const S_IRUSR: crate::mode_t = 0o0400;
+-pub const S_IRWXG: crate::mode_t = 0o0070;
+-pub const S_IXGRP: crate::mode_t = 0o0010;
+-pub const S_IWGRP: crate::mode_t = 0o0020;
+-pub const S_IRGRP: crate::mode_t = 0o0040;
+-pub const S_IRWXO: crate::mode_t = 0o0007;
+-pub const S_IXOTH: crate::mode_t = 0o0001;
+-pub const S_IWOTH: crate::mode_t = 0o0002;
+-pub const S_IROTH: crate::mode_t = 0o0004;
++pub const S_IFIFO: mode_t = 0o1_0000;
++pub const S_IFCHR: mode_t = 0o2_0000;
++pub const S_IFBLK: mode_t = 0o6_0000;
++pub const S_IFDIR: mode_t = 0o4_0000;
++pub const S_IFREG: mode_t = 0o10_0000;
++pub const S_IFLNK: mode_t = 0o12_0000;
++pub const S_IFSOCK: mode_t = 0o14_0000;
++pub const S_IFMT: mode_t = 0o17_0000;
++pub const S_IRWXU: mode_t = 0o0700;
++pub const S_IXUSR: mode_t = 0o0100;
++pub const S_IWUSR: mode_t = 0o0200;
++pub const S_IRUSR: mode_t = 0o0400;
++pub const S_IRWXG: mode_t = 0o0070;
++pub const S_IXGRP: mode_t = 0o0010;
++pub const S_IWGRP: mode_t = 0o0020;
++pub const S_IRGRP: mode_t = 0o0040;
++pub const S_IRWXO: mode_t = 0o0007;
++pub const S_IXOTH: mode_t = 0o0001;
++pub const S_IWOTH: mode_t = 0o0002;
++pub const S_IROTH: mode_t = 0o0004;
+ pub const F_OK: c_int = 0;
+ pub const R_OK: c_int = 4;
+ pub const W_OK: c_int = 2;
+@@ -3726,12 +3726,7 @@ extern "C" {
+     pub fn rewinddir(dirp: *mut crate::DIR);
+ 
+     pub fn openat(dirfd: c_int, pathname: *const c_char, flags: c_int, ...) -> c_int;
+-    pub fn fchmodat(
+-        dirfd: c_int,
+-        pathname: *const c_char,
+-        mode: crate::mode_t,
+-        flags: c_int,
+-    ) -> c_int;
++    pub fn fchmodat(dirfd: c_int, pathname: *const c_char, mode: mode_t, flags: c_int) -> c_int;
+     pub fn fchown(fd: c_int, owner: crate::uid_t, group: crate::gid_t) -> c_int;
+     pub fn fchownat(
+         dirfd: c_int,
+@@ -3748,7 +3743,7 @@ extern "C" {
+         newpath: *const c_char,
+         flags: c_int,
+     ) -> c_int;
+-    pub fn mkdirat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t) -> c_int;
++    pub fn mkdirat(dirfd: c_int, pathname: *const c_char, mode: mode_t) -> c_int;
+     pub fn readlinkat(
+         dirfd: c_int,
+         pathname: *const c_char,
+@@ -3966,7 +3961,7 @@ extern "C" {
+     pub fn gmtime(time_p: *const time_t) -> *mut tm;
+     pub fn localtime(time_p: *const time_t) -> *mut tm;
+ 
+-    pub fn mknod(pathname: *const c_char, mode: crate::mode_t, dev: crate::dev_t) -> c_int;
++    pub fn mknod(pathname: *const c_char, mode: mode_t, dev: crate::dev_t) -> c_int;
+     pub fn uname(buf: *mut crate::utsname) -> c_int;
+     pub fn gethostname(name: *mut c_char, len: size_t) -> c_int;
+     pub fn getservbyname(name: *const c_char, proto: *const c_char) -> *mut servent;
+@@ -4086,8 +4081,7 @@ extern "C" {
+ 
+     pub fn fdopendir(fd: c_int) -> *mut crate::DIR;
+ 
+-    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t, dev: dev_t)
+-        -> c_int;
++    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: mode_t, dev: dev_t) -> c_int;
+     pub fn pthread_condattr_getclock(
+         attr: *const pthread_condattr_t,
+         clock_id: *mut clockid_t,
+@@ -4214,7 +4208,7 @@ extern "C" {
+     pub fn setfsuid(uid: crate::uid_t) -> c_int;
+ 
+     // Not available now on Android
+-    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t) -> c_int;
++    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: mode_t) -> c_int;
+     pub fn if_nameindex() -> *mut if_nameindex;
+     pub fn if_freenameindex(ptr: *mut if_nameindex);
+     pub fn sync_file_range(fd: c_int, offset: off64_t, nbytes: off64_t, flags: c_uint) -> c_int;
+diff --git a/src/unix/aix/mod.rs b/src/unix/aix/mod.rs
+index a43fcd104..8cca9bb3c 100644
+--- a/src/unix/aix/mod.rs
++++ b/src/unix/aix/mod.rs
+@@ -2881,9 +2881,8 @@ extern "C" {
+     ) -> *mut c_void;
+     pub fn memset_s(s: *mut c_void, smax: size_t, c: c_int, n: size_t) -> c_int;
+     pub fn mincore(addr: *const c_void, len: size_t, vec: *mut c_char) -> c_int;
+-    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t) -> c_int;
+-    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t, dev: dev_t)
+-        -> c_int;
++    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: mode_t) -> c_int;
++    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: mode_t, dev: dev_t) -> c_int;
+     pub fn mount(device: *const c_char, path: *const c_char, flags: c_int) -> c_int;
+     pub fn mprotect(addr: *mut c_void, len: size_t, prot: c_int) -> c_int;
+     pub fn mq_close(mqd: crate::mqd_t) -> c_int;
+@@ -2977,7 +2976,7 @@ extern "C" {
+         fd: c_int,
+         path: *const c_char,
+         oflag: c_int,
+-        mode: crate::mode_t,
++        mode: mode_t,
+     ) -> c_int;
+     pub fn posix_spawn_file_actions_destroy(actions: *mut posix_spawn_file_actions_t) -> c_int;
+     pub fn posix_spawn_file_actions_init(actions: *mut posix_spawn_file_actions_t) -> c_int;
+@@ -3142,7 +3141,7 @@ extern "C" {
+     pub fn shmdt(shmaddr: *const c_void) -> c_int;
+     pub fn shmctl(shmid: c_int, cmd: c_int, buf: *mut crate::shmid_ds) -> c_int;
+     pub fn shmget(key: key_t, size: size_t, shmflg: c_int) -> c_int;
+-    pub fn shm_open(name: *const c_char, oflag: c_int, mode: crate::mode_t) -> c_int;
++    pub fn shm_open(name: *const c_char, oflag: c_int, mode: mode_t) -> c_int;
+     pub fn shm_unlink(name: *const c_char) -> c_int;
+     pub fn splice(socket1: c_int, socket2: c_int, flags: c_int) -> c_int;
+     pub fn srand(seed: c_uint);
+diff --git a/src/unix/bsd/apple/mod.rs b/src/unix/bsd/apple/mod.rs
+index 56169a5cf..9c76ed7c0 100644
+--- a/src/unix/bsd/apple/mod.rs
++++ b/src/unix/bsd/apple/mod.rs
+@@ -775,7 +775,7 @@ s! {
+         pub gid: crate::gid_t,
+         pub cuid: crate::uid_t,
+         pub cgid: crate::gid_t,
+-        pub mode: crate::mode_t,
++        pub mode: mode_t,
+         pub _seq: c_ushort,
+         pub _key: crate::key_t,
+     }
+@@ -6341,7 +6341,7 @@ extern "C" {
+         fd: c_int,
+         path: *const c_char,
+         oflag: c_int,
+-        mode: crate::mode_t,
++        mode: mode_t,
+     ) -> c_int;
+     pub fn posix_spawn_file_actions_addclose(
+         actions: *mut posix_spawn_file_actions_t,
+@@ -6660,9 +6660,8 @@ extern "C" {
+     pub fn dirname(path: *mut c_char) -> *mut c_char;
+     pub fn basename(path: *mut c_char) -> *mut c_char;
+ 
+-    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t) -> c_int;
+-    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t, dev: dev_t)
+-        -> c_int;
++    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: mode_t) -> c_int;
++    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: mode_t, dev: dev_t) -> c_int;
+     pub fn freadlink(fd: c_int, buf: *mut c_char, size: size_t) -> c_int;
+     pub fn execvP(
+         file: *const c_char,
+diff --git a/src/unix/bsd/freebsdlike/mod.rs b/src/unix/bsd/freebsdlike/mod.rs
+index 5ed09c78f..197873cd1 100644
+--- a/src/unix/bsd/freebsdlike/mod.rs
++++ b/src/unix/bsd/freebsdlike/mod.rs
+@@ -378,7 +378,7 @@ s! {
+         pub cgid: crate::gid_t,
+         pub uid: crate::uid_t,
+         pub gid: crate::gid_t,
+-        pub mode: crate::mode_t,
++        pub mode: mode_t,
+         pub seq: c_ushort,
+         pub key: crate::key_t,
+     }
+@@ -1602,13 +1602,12 @@ extern "C" {
+     pub fn lchflags(path: *const c_char, flags: c_ulong) -> c_int;
+     pub fn lutimes(file: *const c_char, times: *const crate::timeval) -> c_int;
+     pub fn memrchr(cx: *const c_void, c: c_int, n: size_t) -> *mut c_void;
+-    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t) -> c_int;
++    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: mode_t) -> c_int;
+     #[cfg_attr(
+         all(target_os = "freebsd", any(freebsd11, freebsd10)),
+         link_name = "mknodat@FBSD_1.1"
+     )]
+-    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t, dev: dev_t)
+-        -> c_int;
++    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: mode_t, dev: dev_t) -> c_int;
+     pub fn malloc_usable_size(ptr: *const c_void) -> size_t;
+     pub fn mincore(addr: *const c_void, len: size_t, vec: *mut c_char) -> c_int;
+     pub fn newlocale(mask: c_int, locale: *const c_char, base: crate::locale_t) -> crate::locale_t;
+@@ -1730,7 +1729,7 @@ extern "C" {
+     pub fn setresuid(ruid: crate::uid_t, euid: crate::uid_t, suid: crate::uid_t) -> c_int;
+     pub fn settimeofday(tv: *const crate::timeval, tz: *const crate::timezone) -> c_int;
+     pub fn setutxent();
+-    pub fn shm_open(name: *const c_char, oflag: c_int, mode: crate::mode_t) -> c_int;
++    pub fn shm_open(name: *const c_char, oflag: c_int, mode: mode_t) -> c_int;
+     pub fn sigtimedwait(
+         set: *const sigset_t,
+         info: *mut siginfo_t,
+@@ -1872,7 +1871,7 @@ extern "C" {
+         fd: c_int,
+         path: *const c_char,
+         oflag: c_int,
+-        mode: crate::mode_t,
++        mode: mode_t,
+     ) -> c_int;
+     pub fn posix_spawn_file_actions_addclose(
+         actions: *mut posix_spawn_file_actions_t,
+diff --git a/src/unix/bsd/netbsdlike/mod.rs b/src/unix/bsd/netbsdlike/mod.rs
+index dfd58d75b..682b8b7e9 100644
+--- a/src/unix/bsd/netbsdlike/mod.rs
++++ b/src/unix/bsd/netbsdlike/mod.rs
+@@ -78,7 +78,7 @@ s! {
+         pub cgid: crate::gid_t,
+         pub uid: crate::uid_t,
+         pub gid: crate::gid_t,
+-        pub mode: crate::mode_t,
++        pub mode: mode_t,
+         #[cfg(target_os = "openbsd")]
+         pub seq: c_ushort,
+         #[cfg(target_os = "netbsd")]
+@@ -689,7 +689,7 @@ extern "C" {
+     #[cfg_attr(target_os = "netbsd", link_name = "__clock_settime50")]
+     pub fn clock_settime(clk_id: crate::clockid_t, tp: *const crate::timespec) -> c_int;
+     pub fn __errno() -> *mut c_int;
+-    pub fn shm_open(name: *const c_char, oflag: c_int, mode: crate::mode_t) -> c_int;
++    pub fn shm_open(name: *const c_char, oflag: c_int, mode: mode_t) -> c_int;
+     pub fn memrchr(cx: *const c_void, c: c_int, n: size_t) -> *mut c_void;
+     pub fn mkostemp(template: *mut c_char, flags: c_int) -> c_int;
+     pub fn mkostemps(template: *mut c_char, suffixlen: c_int, flags: c_int) -> c_int;
+@@ -707,9 +707,8 @@ extern "C" {
+     pub fn getpriority(which: c_int, who: crate::id_t) -> c_int;
+     pub fn setpriority(which: c_int, who: crate::id_t, prio: c_int) -> c_int;
+ 
+-    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t, dev: dev_t)
+-        -> c_int;
+-    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t) -> c_int;
++    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: mode_t, dev: dev_t) -> c_int;
++    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: mode_t) -> c_int;
+     pub fn sem_timedwait(sem: *mut sem_t, abstime: *const crate::timespec) -> c_int;
+     pub fn sem_getvalue(sem: *mut sem_t, sval: *mut c_int) -> c_int;
+     pub fn pthread_condattr_setclock(
+@@ -830,7 +829,7 @@ extern "C" {
+         fd: c_int,
+         path: *const c_char,
+         oflag: c_int,
+-        mode: crate::mode_t,
++        mode: mode_t,
+     ) -> c_int;
+     pub fn posix_spawn_file_actions_addclose(
+         actions: *mut posix_spawn_file_actions_t,
+diff --git a/src/unix/haiku/mod.rs b/src/unix/haiku/mod.rs
+index 76e44cc79..ef48fa6f9 100644
+--- a/src/unix/haiku/mod.rs
++++ b/src/unix/haiku/mod.rs
+@@ -420,7 +420,7 @@ s! {
+         pub gid: crate::gid_t,
+         pub cuid: crate::uid_t,
+         pub cgid: crate::gid_t,
+-        pub mode: crate::mode_t,
++        pub mode: mode_t,
+     }
+ 
+     pub struct sembuf {
+@@ -774,27 +774,27 @@ pub const O_NOFOLLOW: c_int = 0x00080000;
+ pub const O_NOCACHE: c_int = 0x00100000;
+ pub const O_DIRECTORY: c_int = 0x00200000;
+ 
+-pub const S_IFIFO: crate::mode_t = 0o1_0000;
+-pub const S_IFCHR: crate::mode_t = 0o2_0000;
+-pub const S_IFBLK: crate::mode_t = 0o6_0000;
+-pub const S_IFDIR: crate::mode_t = 0o4_0000;
+-pub const S_IFREG: crate::mode_t = 0o10_0000;
+-pub const S_IFLNK: crate::mode_t = 0o12_0000;
+-pub const S_IFSOCK: crate::mode_t = 0o14_0000;
+-pub const S_IFMT: crate::mode_t = 0o17_0000;
+-
+-pub const S_IRWXU: crate::mode_t = 0o0700;
+-pub const S_IRUSR: crate::mode_t = 0o0400;
+-pub const S_IWUSR: crate::mode_t = 0o0200;
+-pub const S_IXUSR: crate::mode_t = 0o0100;
+-pub const S_IRWXG: crate::mode_t = 0o0070;
+-pub const S_IRGRP: crate::mode_t = 0o0040;
+-pub const S_IWGRP: crate::mode_t = 0o0020;
+-pub const S_IXGRP: crate::mode_t = 0o0010;
+-pub const S_IRWXO: crate::mode_t = 0o0007;
+-pub const S_IROTH: crate::mode_t = 0o0004;
+-pub const S_IWOTH: crate::mode_t = 0o0002;
+-pub const S_IXOTH: crate::mode_t = 0o0001;
++pub const S_IFIFO: mode_t = 0o1_0000;
++pub const S_IFCHR: mode_t = 0o2_0000;
++pub const S_IFBLK: mode_t = 0o6_0000;
++pub const S_IFDIR: mode_t = 0o4_0000;
++pub const S_IFREG: mode_t = 0o10_0000;
++pub const S_IFLNK: mode_t = 0o12_0000;
++pub const S_IFSOCK: mode_t = 0o14_0000;
++pub const S_IFMT: mode_t = 0o17_0000;
++
++pub const S_IRWXU: mode_t = 0o0700;
++pub const S_IRUSR: mode_t = 0o0400;
++pub const S_IWUSR: mode_t = 0o0200;
++pub const S_IXUSR: mode_t = 0o0100;
++pub const S_IRWXG: mode_t = 0o0070;
++pub const S_IRGRP: mode_t = 0o0040;
++pub const S_IWGRP: mode_t = 0o0020;
++pub const S_IXGRP: mode_t = 0o0010;
++pub const S_IRWXO: mode_t = 0o0007;
++pub const S_IROTH: mode_t = 0o0004;
++pub const S_IWOTH: mode_t = 0o0002;
++pub const S_IXOTH: mode_t = 0o0001;
+ 
+ pub const F_OK: c_int = 0;
+ pub const R_OK: c_int = 4;
+@@ -1733,9 +1733,8 @@ extern "C" {
+         bufferSize: size_t,
+         res: *mut *mut spwd,
+     ) -> c_int;
+-    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t) -> c_int;
+-    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t, dev: dev_t)
+-        -> c_int;
++    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: mode_t) -> c_int;
++    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: mode_t, dev: dev_t) -> c_int;
+     pub fn sem_destroy(sem: *mut sem_t) -> c_int;
+     pub fn sem_init(sem: *mut sem_t, pshared: c_int, value: c_uint) -> c_int;
+ 
+@@ -1813,7 +1812,7 @@ extern "C" {
+     pub fn posix_fadvise(fd: c_int, offset: off_t, len: off_t, advice: c_int) -> c_int;
+     pub fn posix_fallocate(fd: c_int, offset: off_t, len: off_t) -> c_int;
+ 
+-    pub fn shm_open(name: *const c_char, oflag: c_int, mode: crate::mode_t) -> c_int;
++    pub fn shm_open(name: *const c_char, oflag: c_int, mode: mode_t) -> c_int;
+     pub fn shm_unlink(name: *const c_char) -> c_int;
+ 
+     pub fn seekdir(dirp: *mut crate::DIR, loc: c_long);
+@@ -2032,7 +2031,7 @@ extern "C" {
+         fildes: c_int,
+         path: *const c_char,
+         oflag: c_int,
+-        mode: crate::mode_t,
++        mode: mode_t,
+     ) -> c_int;
+     pub fn posix_spawn_file_actions_addclose(
+         file_actions: *mut posix_spawn_file_actions_t,
+diff --git a/src/unix/hurd/mod.rs b/src/unix/hurd/mod.rs
+index 8703f4d37..961710b5a 100644
+--- a/src/unix/hurd/mod.rs
++++ b/src/unix/hurd/mod.rs
+@@ -2150,35 +2150,35 @@ pub const SF_NOUNLINK: c_uint = 1048576;
+ pub const SF_SNAPSHOT: c_uint = 2097152;
+ pub const UTIME_NOW: c_long = -1;
+ pub const UTIME_OMIT: c_long = -2;
+-pub const S_IFMT: crate::mode_t = 0o17_0000;
+-pub const S_IFDIR: crate::mode_t = 0o4_0000;
+-pub const S_IFCHR: crate::mode_t = 0o2_0000;
+-pub const S_IFBLK: crate::mode_t = 0o6_0000;
+-pub const S_IFREG: crate::mode_t = 0o10_0000;
+-pub const S_IFIFO: crate::mode_t = 0o1_0000;
+-pub const S_IFLNK: crate::mode_t = 0o12_0000;
+-pub const S_IFSOCK: crate::mode_t = 0o14_0000;
+-pub const S_ISUID: crate::mode_t = 0o4000;
+-pub const S_ISGID: crate::mode_t = 0o2000;
+-pub const S_ISVTX: crate::mode_t = 0o1000;
+-pub const S_IRUSR: crate::mode_t = 0o0400;
+-pub const S_IWUSR: crate::mode_t = 0o0200;
+-pub const S_IXUSR: crate::mode_t = 0o0100;
+-pub const S_IRWXU: crate::mode_t = 0o0700;
+-pub const S_IREAD: crate::mode_t = 0o0400;
+-pub const S_IWRITE: crate::mode_t = 0o0200;
+-pub const S_IEXEC: crate::mode_t = 0o0100;
+-pub const S_IRGRP: crate::mode_t = 0o0040;
+-pub const S_IWGRP: crate::mode_t = 0o0020;
+-pub const S_IXGRP: crate::mode_t = 0o0010;
+-pub const S_IRWXG: crate::mode_t = 0o0070;
+-pub const S_IROTH: crate::mode_t = 0o0004;
+-pub const S_IWOTH: crate::mode_t = 0o0002;
+-pub const S_IXOTH: crate::mode_t = 0o0001;
+-pub const S_IRWXO: crate::mode_t = 0o0007;
+-pub const ACCESSPERMS: crate::mode_t = 511;
+-pub const ALLPERMS: crate::mode_t = 4095;
+-pub const DEFFILEMODE: crate::mode_t = 438;
++pub const S_IFMT: mode_t = 0o17_0000;
++pub const S_IFDIR: mode_t = 0o4_0000;
++pub const S_IFCHR: mode_t = 0o2_0000;
++pub const S_IFBLK: mode_t = 0o6_0000;
++pub const S_IFREG: mode_t = 0o10_0000;
++pub const S_IFIFO: mode_t = 0o1_0000;
++pub const S_IFLNK: mode_t = 0o12_0000;
++pub const S_IFSOCK: mode_t = 0o14_0000;
++pub const S_ISUID: mode_t = 0o4000;
++pub const S_ISGID: mode_t = 0o2000;
++pub const S_ISVTX: mode_t = 0o1000;
++pub const S_IRUSR: mode_t = 0o0400;
++pub const S_IWUSR: mode_t = 0o0200;
++pub const S_IXUSR: mode_t = 0o0100;
++pub const S_IRWXU: mode_t = 0o0700;
++pub const S_IREAD: mode_t = 0o0400;
++pub const S_IWRITE: mode_t = 0o0200;
++pub const S_IEXEC: mode_t = 0o0100;
++pub const S_IRGRP: mode_t = 0o0040;
++pub const S_IWGRP: mode_t = 0o0020;
++pub const S_IXGRP: mode_t = 0o0010;
++pub const S_IRWXG: mode_t = 0o0070;
++pub const S_IROTH: mode_t = 0o0004;
++pub const S_IWOTH: mode_t = 0o0002;
++pub const S_IXOTH: mode_t = 0o0001;
++pub const S_IRWXO: mode_t = 0o0007;
++pub const ACCESSPERMS: mode_t = 511;
++pub const ALLPERMS: mode_t = 4095;
++pub const DEFFILEMODE: mode_t = 438;
+ pub const S_BLKSIZE: usize = 512;
+ pub const STATX_TYPE: c_uint = 1;
+ pub const STATX_MODE: c_uint = 2;
+@@ -3574,8 +3574,7 @@ extern "C" {
+ 
+     pub fn mkfifoat(__fd: c_int, __path: *const c_char, __mode: __mode_t) -> c_int;
+ 
+-    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t, dev: dev_t)
+-        -> c_int;
++    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: mode_t, dev: dev_t) -> c_int;
+ 
+     pub fn __libc_current_sigrtmin() -> c_int;
+ 
+@@ -4248,7 +4247,7 @@ extern "C" {
+         fd: c_int,
+         path: *const c_char,
+         oflag: c_int,
+-        mode: crate::mode_t,
++        mode: mode_t,
+     ) -> c_int;
+     pub fn posix_spawn_file_actions_addclose(
+         actions: *mut posix_spawn_file_actions_t,
+diff --git a/src/unix/linux_like/android/mod.rs b/src/unix/linux_like/android/mod.rs
+index c5875f295..3d24d5d8f 100644
+--- a/src/unix/linux_like/android/mod.rs
++++ b/src/unix/linux_like/android/mod.rs
+@@ -2709,7 +2709,7 @@ pub const TUNSETTXFILTER: c_int = _IOW::<c_int>(T_TYPE, 209);
+ pub const TUNGETIFF: c_int = _IOR::<c_int>(T_TYPE, 210);
+ pub const TUNGETSNDBUF: c_int = _IOR::<c_int>(T_TYPE, 211);
+ pub const TUNSETSNDBUF: c_int = _IOW::<c_int>(T_TYPE, 212);
+-pub const TUNATTACHFILTER: c_int =  _IOW::<sock_fprog>(T_TYPE, 213);
++pub const TUNATTACHFILTER: c_int = _IOW::<sock_fprog>(T_TYPE, 213);
+ pub const TUNDETACHFILTER: c_int = _IOW::<sock_fprog>(T_TYPE, 214);
+ pub const TUNGETVNETHDRSZ: c_int = _IOR::<c_int>(T_TYPE, 215);
+ pub const TUNSETVNETHDRSZ: c_int = _IOW::<c_int>(T_TYPE, 216);
+@@ -4307,15 +4307,20 @@ pub const fn _IO(ty: u32, nr: u32) -> c_int {
+ 
+ /// Build an ioctl number for an read-only ioctl.
+ pub const fn _IOR<T>(ty: u32, nr: u32) -> c_int {
+-    super::_IOC(super::_IOC_READ, ty, nr, mem::size_of::<T>())  as c_int
++    super::_IOC(super::_IOC_READ, ty, nr, mem::size_of::<T>()) as c_int
+ }
+ 
+ /// Build an ioctl number for an write-only ioctl.
+ pub const fn _IOW<T>(ty: u32, nr: u32) -> c_int {
+-    super::_IOC(super::_IOC_WRITE, ty, nr, mem::size_of::<T>())  as c_int
++    super::_IOC(super::_IOC_WRITE, ty, nr, mem::size_of::<T>()) as c_int
+ }
+ 
+ /// Build an ioctl number for a read-write ioctl.
+ pub const fn _IOWR<T>(ty: u32, nr: u32) -> c_int {
+-    super::_IOC(super::_IOC_READ | super::_IOC_WRITE, ty, nr, mem::size_of::<T>())  as c_int
++    super::_IOC(
++        super::_IOC_READ | super::_IOC_WRITE,
++        ty,
++        nr,
++        mem::size_of::<T>(),
++    ) as c_int
+ }
+diff --git a/src/unix/linux_like/emscripten/mod.rs b/src/unix/linux_like/emscripten/mod.rs
+index 985b3c0c5..462a944b1 100644
+--- a/src/unix/linux_like/emscripten/mod.rs
++++ b/src/unix/linux_like/emscripten/mod.rs
+@@ -171,7 +171,7 @@ s! {
+         pub gid: crate::gid_t,
+         pub cuid: crate::uid_t,
+         pub cgid: crate::gid_t,
+-        pub mode: crate::mode_t,
++        pub mode: mode_t,
+         pub __seq: c_int,
+         __unused1: c_long,
+         __unused2: c_long,
+@@ -229,7 +229,7 @@ s! {
+         __st_dev_padding: c_int,
+         #[cfg(emscripten_old_stat_abi)]
+         __st_ino_truncated: c_long,
+-        pub st_mode: crate::mode_t,
++        pub st_mode: mode_t,
+         pub st_nlink: crate::nlink_t,
+         pub st_uid: crate::uid_t,
+         pub st_gid: crate::gid_t,
+@@ -1530,7 +1530,7 @@ extern "C" {
+     ) -> c_int;
+     pub fn getloadavg(loadavg: *mut c_double, nelem: c_int) -> c_int;
+ 
+-    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t) -> c_int;
++    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: mode_t) -> c_int;
+     pub fn if_nameindex() -> *mut if_nameindex;
+     pub fn if_freenameindex(ptr: *mut if_nameindex);
+ 
+diff --git a/src/unix/linux_like/linux/mod.rs b/src/unix/linux_like/linux/mod.rs
+index 5be701bee..59857ff12 100644
+--- a/src/unix/linux_like/linux/mod.rs
++++ b/src/unix/linux_like/linux/mod.rs
+@@ -6544,7 +6544,7 @@ extern "C" {
+     pub fn setfsuid(uid: crate::uid_t) -> c_int;
+ 
+     // Not available now on Android
+-    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t) -> c_int;
++    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: mode_t) -> c_int;
+     pub fn if_nameindex() -> *mut if_nameindex;
+     pub fn if_freenameindex(ptr: *mut if_nameindex);
+     pub fn sync_file_range(fd: c_int, offset: off64_t, nbytes: off64_t, flags: c_uint) -> c_int;
+@@ -6899,7 +6899,7 @@ extern "C" {
+         fd: c_int,
+         path: *const c_char,
+         oflag: c_int,
+-        mode: crate::mode_t,
++        mode: mode_t,
+     ) -> c_int;
+     pub fn posix_spawn_file_actions_addclose(
+         actions: *mut posix_spawn_file_actions_t,
+diff --git a/src/unix/linux_like/mod.rs b/src/unix/linux_like/mod.rs
+index 64481a673..9c7766a14 100644
+--- a/src/unix/linux_like/mod.rs
++++ b/src/unix/linux_like/mod.rs
+@@ -545,26 +545,26 @@ pub const O_RDWR: c_int = 2;
+ 
+ pub const SOCK_CLOEXEC: c_int = O_CLOEXEC;
+ 
+-pub const S_IFIFO: crate::mode_t = 0o1_0000;
+-pub const S_IFCHR: crate::mode_t = 0o2_0000;
+-pub const S_IFBLK: crate::mode_t = 0o6_0000;
+-pub const S_IFDIR: crate::mode_t = 0o4_0000;
+-pub const S_IFREG: crate::mode_t = 0o10_0000;
+-pub const S_IFLNK: crate::mode_t = 0o12_0000;
+-pub const S_IFSOCK: crate::mode_t = 0o14_0000;
+-pub const S_IFMT: crate::mode_t = 0o17_0000;
+-pub const S_IRWXU: crate::mode_t = 0o0700;
+-pub const S_IXUSR: crate::mode_t = 0o0100;
+-pub const S_IWUSR: crate::mode_t = 0o0200;
+-pub const S_IRUSR: crate::mode_t = 0o0400;
+-pub const S_IRWXG: crate::mode_t = 0o0070;
+-pub const S_IXGRP: crate::mode_t = 0o0010;
+-pub const S_IWGRP: crate::mode_t = 0o0020;
+-pub const S_IRGRP: crate::mode_t = 0o0040;
+-pub const S_IRWXO: crate::mode_t = 0o0007;
+-pub const S_IXOTH: crate::mode_t = 0o0001;
+-pub const S_IWOTH: crate::mode_t = 0o0002;
+-pub const S_IROTH: crate::mode_t = 0o0004;
++pub const S_IFIFO: mode_t = 0o1_0000;
++pub const S_IFCHR: mode_t = 0o2_0000;
++pub const S_IFBLK: mode_t = 0o6_0000;
++pub const S_IFDIR: mode_t = 0o4_0000;
++pub const S_IFREG: mode_t = 0o10_0000;
++pub const S_IFLNK: mode_t = 0o12_0000;
++pub const S_IFSOCK: mode_t = 0o14_0000;
++pub const S_IFMT: mode_t = 0o17_0000;
++pub const S_IRWXU: mode_t = 0o0700;
++pub const S_IXUSR: mode_t = 0o0100;
++pub const S_IWUSR: mode_t = 0o0200;
++pub const S_IRUSR: mode_t = 0o0400;
++pub const S_IRWXG: mode_t = 0o0070;
++pub const S_IXGRP: mode_t = 0o0010;
++pub const S_IWGRP: mode_t = 0o0020;
++pub const S_IRGRP: mode_t = 0o0040;
++pub const S_IRWXO: mode_t = 0o0007;
++pub const S_IXOTH: mode_t = 0o0001;
++pub const S_IWOTH: mode_t = 0o0002;
++pub const S_IROTH: mode_t = 0o0004;
+ pub const F_OK: c_int = 0;
+ pub const R_OK: c_int = 4;
+ pub const W_OK: c_int = 2;
+@@ -1877,8 +1877,7 @@ extern "C" {
+     pub fn freelocale(loc: crate::locale_t);
+     pub fn newlocale(mask: c_int, locale: *const c_char, base: crate::locale_t) -> crate::locale_t;
+     pub fn uselocale(loc: crate::locale_t) -> crate::locale_t;
+-    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t, dev: dev_t)
+-        -> c_int;
++    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: mode_t, dev: dev_t) -> c_int;
+     pub fn pthread_condattr_getclock(
+         attr: *const pthread_condattr_t,
+         clock_id: *mut clockid_t,
+diff --git a/src/unix/mod.rs b/src/unix/mod.rs
+index 433eeec95..4fc2afedf 100644
+--- a/src/unix/mod.rs
++++ b/src/unix/mod.rs
+@@ -245,9 +245,9 @@ cfg_if! {
+ }
+ pub const SIGIOT: c_int = 6;
+ 
+-pub const S_ISUID: crate::mode_t = 0o4000;
+-pub const S_ISGID: crate::mode_t = 0o2000;
+-pub const S_ISVTX: crate::mode_t = 0o1000;
++pub const S_ISUID: mode_t = 0o4000;
++pub const S_ISGID: mode_t = 0o2000;
++pub const S_ISVTX: mode_t = 0o1000;
+ 
+ cfg_if! {
+     if #[cfg(not(any(
+@@ -939,12 +939,7 @@ extern "C" {
+     )]
+     pub fn rewinddir(dirp: *mut crate::DIR);
+ 
+-    pub fn fchmodat(
+-        dirfd: c_int,
+-        pathname: *const c_char,
+-        mode: crate::mode_t,
+-        flags: c_int,
+-    ) -> c_int;
++    pub fn fchmodat(dirfd: c_int, pathname: *const c_char, mode: mode_t, flags: c_int) -> c_int;
+     pub fn fchown(fd: c_int, owner: crate::uid_t, group: crate::gid_t) -> c_int;
+     pub fn fchownat(
+         dirfd: c_int,
+@@ -1421,7 +1416,7 @@ extern "C" {
+         all(target_os = "freebsd", any(freebsd11, freebsd10)),
+         link_name = "mknod@FBSD_1.0"
+     )]
+-    pub fn mknod(pathname: *const c_char, mode: crate::mode_t, dev: crate::dev_t) -> c_int;
++    pub fn mknod(pathname: *const c_char, mode: mode_t, dev: crate::dev_t) -> c_int;
+     pub fn gethostname(name: *mut c_char, len: size_t) -> c_int;
+     pub fn endservent();
+     pub fn getservbyname(name: *const c_char, proto: *const c_char) -> *mut servent;
+@@ -1659,7 +1654,7 @@ cfg_if! {
+             )]
+             pub fn pause() -> c_int;
+ 
+-            pub fn mkdirat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t) -> c_int;
++            pub fn mkdirat(dirfd: c_int, pathname: *const c_char, mode: mode_t) -> c_int;
+             #[cfg_attr(gnu_file_offset_bits64, link_name = "openat64")]
+             pub fn openat(dirfd: c_int, pathname: *const c_char, flags: c_int, ...) -> c_int;
+ 
+diff --git a/src/unix/newlib/mod.rs b/src/unix/newlib/mod.rs
+index ae118b471..d49bdb3e9 100644
+--- a/src/unix/newlib/mod.rs
++++ b/src/unix/newlib/mod.rs
+@@ -568,28 +568,28 @@ pub const SEEK_END: c_int = 2;
+ pub const FIOCLEX: c_ulong = 0x20006601;
+ pub const FIONCLEX: c_ulong = 0x20006602;
+ 
+-pub const S_BLKSIZE: crate::mode_t = 1024;
+-pub const S_IREAD: crate::mode_t = 0o0400;
+-pub const S_IWRITE: crate::mode_t = 0o0200;
+-pub const S_IEXEC: crate::mode_t = 0o0100;
+-pub const S_ENFMT: crate::mode_t = 0o2000;
+-pub const S_IFMT: crate::mode_t = 0o17_0000;
+-pub const S_IFDIR: crate::mode_t = 0o4_0000;
+-pub const S_IFCHR: crate::mode_t = 0o2_0000;
+-pub const S_IFBLK: crate::mode_t = 0o6_0000;
+-pub const S_IFREG: crate::mode_t = 0o10_0000;
+-pub const S_IFLNK: crate::mode_t = 0o12_0000;
+-pub const S_IFSOCK: crate::mode_t = 0o14_0000;
+-pub const S_IFIFO: crate::mode_t = 0o1_0000;
+-pub const S_IRUSR: crate::mode_t = 0o0400;
+-pub const S_IWUSR: crate::mode_t = 0o0200;
+-pub const S_IXUSR: crate::mode_t = 0o0100;
+-pub const S_IRGRP: crate::mode_t = 0o0040;
+-pub const S_IWGRP: crate::mode_t = 0o0020;
+-pub const S_IXGRP: crate::mode_t = 0o0010;
+-pub const S_IROTH: crate::mode_t = 0o0004;
+-pub const S_IWOTH: crate::mode_t = 0o0002;
+-pub const S_IXOTH: crate::mode_t = 0o0001;
++pub const S_BLKSIZE: mode_t = 1024;
++pub const S_IREAD: mode_t = 0o0400;
++pub const S_IWRITE: mode_t = 0o0200;
++pub const S_IEXEC: mode_t = 0o0100;
++pub const S_ENFMT: mode_t = 0o2000;
++pub const S_IFMT: mode_t = 0o17_0000;
++pub const S_IFDIR: mode_t = 0o4_0000;
++pub const S_IFCHR: mode_t = 0o2_0000;
++pub const S_IFBLK: mode_t = 0o6_0000;
++pub const S_IFREG: mode_t = 0o10_0000;
++pub const S_IFLNK: mode_t = 0o12_0000;
++pub const S_IFSOCK: mode_t = 0o14_0000;
++pub const S_IFIFO: mode_t = 0o1_0000;
++pub const S_IRUSR: mode_t = 0o0400;
++pub const S_IWUSR: mode_t = 0o0200;
++pub const S_IXUSR: mode_t = 0o0100;
++pub const S_IRGRP: mode_t = 0o0040;
++pub const S_IWGRP: mode_t = 0o0020;
++pub const S_IXGRP: mode_t = 0o0010;
++pub const S_IROTH: mode_t = 0o0004;
++pub const S_IWOTH: mode_t = 0o0002;
++pub const S_IXOTH: mode_t = 0o0001;
+ 
+ pub const SOL_TCP: c_int = 6;
+ 
+diff --git a/src/unix/nto/mod.rs b/src/unix/nto/mod.rs
+index e0a1c9b65..631972b14 100644
+--- a/src/unix/nto/mod.rs
++++ b/src/unix/nto/mod.rs
+@@ -98,7 +98,7 @@ s! {
+         pub __old_st_mtime: crate::_Time32t,
+         pub __old_st_atime: crate::_Time32t,
+         pub __old_st_ctime: crate::_Time32t,
+-        pub st_mode: crate::mode_t,
++        pub st_mode: mode_t,
+         pub st_nlink: crate::nlink_t,
+         pub st_blocksize: crate::blksize_t,
+         pub st_nblocks: i32,
+@@ -563,7 +563,7 @@ s! {
+         pub gid: crate::gid_t,
+         pub cuid: crate::uid_t,
+         pub cgid: crate::gid_t,
+-        pub mode: crate::mode_t,
++        pub mode: mode_t,
+         pub seq: c_uint,
+         pub key: crate::key_t,
+         _reserved: [c_int; 4],
+@@ -2175,27 +2175,27 @@ pub const S_IEXEC: mode_t = crate::S_IXUSR;
+ pub const S_IWRITE: mode_t = crate::S_IWUSR;
+ pub const S_IREAD: mode_t = crate::S_IRUSR;
+ 
+-pub const S_IFIFO: crate::mode_t = 0o1_0000;
+-pub const S_IFCHR: crate::mode_t = 0o2_0000;
+-pub const S_IFDIR: crate::mode_t = 0o4_0000;
+-pub const S_IFBLK: crate::mode_t = 0o6_0000;
+-pub const S_IFREG: crate::mode_t = 0o10_0000;
+-pub const S_IFLNK: crate::mode_t = 0o12_0000;
+-pub const S_IFSOCK: crate::mode_t = 0o14_0000;
+-pub const S_IFMT: crate::mode_t = 0o17_0000;
+-
+-pub const S_IXOTH: crate::mode_t = 0o0001;
+-pub const S_IWOTH: crate::mode_t = 0o0002;
+-pub const S_IROTH: crate::mode_t = 0o0004;
+-pub const S_IRWXO: crate::mode_t = 0o0007;
+-pub const S_IXGRP: crate::mode_t = 0o0010;
+-pub const S_IWGRP: crate::mode_t = 0o0020;
+-pub const S_IRGRP: crate::mode_t = 0o0040;
+-pub const S_IRWXG: crate::mode_t = 0o0070;
+-pub const S_IXUSR: crate::mode_t = 0o0100;
+-pub const S_IWUSR: crate::mode_t = 0o0200;
+-pub const S_IRUSR: crate::mode_t = 0o0400;
+-pub const S_IRWXU: crate::mode_t = 0o0700;
++pub const S_IFIFO: mode_t = 0o1_0000;
++pub const S_IFCHR: mode_t = 0o2_0000;
++pub const S_IFDIR: mode_t = 0o4_0000;
++pub const S_IFBLK: mode_t = 0o6_0000;
++pub const S_IFREG: mode_t = 0o10_0000;
++pub const S_IFLNK: mode_t = 0o12_0000;
++pub const S_IFSOCK: mode_t = 0o14_0000;
++pub const S_IFMT: mode_t = 0o17_0000;
++
++pub const S_IXOTH: mode_t = 0o0001;
++pub const S_IWOTH: mode_t = 0o0002;
++pub const S_IROTH: mode_t = 0o0004;
++pub const S_IRWXO: mode_t = 0o0007;
++pub const S_IXGRP: mode_t = 0o0010;
++pub const S_IWGRP: mode_t = 0o0020;
++pub const S_IRGRP: mode_t = 0o0040;
++pub const S_IRWXG: mode_t = 0o0070;
++pub const S_IXUSR: mode_t = 0o0100;
++pub const S_IWUSR: mode_t = 0o0200;
++pub const S_IRUSR: mode_t = 0o0400;
++pub const S_IRWXU: mode_t = 0o0700;
+ 
+ pub const F_LOCK: c_int = 1;
+ pub const F_TEST: c_int = 3;
+@@ -2982,13 +2982,8 @@ extern "C" {
+     pub fn fdatasync(fd: c_int) -> c_int;
+     pub fn getpriority(which: c_int, who: crate::id_t) -> c_int;
+     pub fn setpriority(which: c_int, who: crate::id_t, prio: c_int) -> c_int;
+-    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t) -> c_int;
+-    pub fn mknodat(
+-        __fd: c_int,
+-        pathname: *const c_char,
+-        mode: crate::mode_t,
+-        dev: crate::dev_t,
+-    ) -> c_int;
++    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: mode_t) -> c_int;
++    pub fn mknodat(__fd: c_int, pathname: *const c_char, mode: mode_t, dev: crate::dev_t) -> c_int;
+ 
+     pub fn clock_getres(clk_id: crate::clockid_t, tp: *mut crate::timespec) -> c_int;
+     pub fn clock_gettime(clk_id: crate::clockid_t, tp: *mut crate::timespec) -> c_int;
+@@ -3361,7 +3356,7 @@ extern "C" {
+         fd: c_int,
+         path: *const c_char,
+         oflag: c_int,
+-        mode: crate::mode_t,
++        mode: mode_t,
+     ) -> c_int;
+     pub fn posix_spawn_file_actions_addclose(
+         actions: *mut posix_spawn_file_actions_t,
+diff --git a/src/unix/redox/mod.rs b/src/unix/redox/mod.rs
+index d7ed748c0..15b8da6fa 100644
+--- a/src/unix/redox/mod.rs
++++ b/src/unix/redox/mod.rs
+@@ -196,7 +196,7 @@ s! {
+         pub st_dev: crate::dev_t,
+         pub st_ino: crate::ino_t,
+         pub st_nlink: crate::nlink_t,
+-        pub st_mode: crate::mode_t,
++        pub st_mode: mode_t,
+         pub st_uid: crate::uid_t,
+         pub st_gid: crate::gid_t,
+         pub st_rdev: crate::dev_t,
+@@ -1262,18 +1262,8 @@ extern "C" {
+     pub fn futimens(fd: c_int, times: *const crate::timespec) -> c_int;
+ 
+     // sys/uio.h
+-    pub fn preadv(
+-        fd: c_int,
+-        iov: *const crate::iovec,
+-        iovcnt: c_int,
+-        offset: off_t,
+-    ) -> ssize_t;
+-    pub fn pwritev(
+-        fd: c_int,
+-        iov: *const crate::iovec,
+-        iovcnt: c_int,
+-        offset: off_t,
+-    ) -> ssize_t;
++    pub fn preadv(fd: c_int, iov: *const crate::iovec, iovcnt: c_int, offset: off_t) -> ssize_t;
++    pub fn pwritev(fd: c_int, iov: *const crate::iovec, iovcnt: c_int, offset: off_t) -> ssize_t;
+     pub fn readv(fd: c_int, iov: *const crate::iovec, iovcnt: c_int) -> ssize_t;
+     pub fn writev(fd: c_int, iov: *const crate::iovec, iovcnt: c_int) -> ssize_t;
+ 
+diff --git a/src/unix/solarish/mod.rs b/src/unix/solarish/mod.rs
+index 3ddde8da0..652d5263a 100644
+--- a/src/unix/solarish/mod.rs
++++ b/src/unix/solarish/mod.rs
+@@ -96,7 +96,7 @@ s! {
+         pub gid: crate::gid_t,
+         pub cuid: crate::uid_t,
+         pub cgid: crate::gid_t,
+-        pub mode: crate::mode_t,
++        pub mode: mode_t,
+         pub seq: c_uint,
+         pub key: crate::key_t,
+     }
+@@ -328,7 +328,7 @@ s! {
+     pub struct stat {
+         pub st_dev: crate::dev_t,
+         pub st_ino: crate::ino_t,
+-        pub st_mode: crate::mode_t,
++        pub st_mode: mode_t,
+         pub st_nlink: crate::nlink_t,
+         pub st_uid: crate::uid_t,
+         pub st_gid: crate::gid_t,
+@@ -2648,9 +2648,8 @@ extern "C" {
+     pub fn getpriority(which: c_int, who: c_int) -> c_int;
+     pub fn setpriority(which: c_int, who: c_int, prio: c_int) -> c_int;
+ 
+-    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t, dev: dev_t)
+-        -> c_int;
+-    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t) -> c_int;
++    pub fn mknodat(dirfd: c_int, pathname: *const c_char, mode: mode_t, dev: dev_t) -> c_int;
++    pub fn mkfifoat(dirfd: c_int, pathname: *const c_char, mode: mode_t) -> c_int;
+     pub fn sethostname(name: *const c_char, len: c_int) -> c_int;
+     pub fn if_nameindex() -> *mut if_nameindex;
+     pub fn if_freenameindex(ptr: *mut if_nameindex);
+@@ -2727,7 +2726,7 @@ extern "C" {
+         fildes: c_int,
+         path: *const c_char,
+         oflag: c_int,
+-        mode: crate::mode_t,
++        mode: mode_t,
+     ) -> c_int;
+     pub fn posix_spawn_file_actions_addclose(
+         file_actions: *mut posix_spawn_file_actions_t,
+@@ -2810,7 +2809,7 @@ extern "C" {
+ 
+     pub fn shmget(key: key_t, size: size_t, shmflg: c_int) -> c_int;
+ 
+-    pub fn shm_open(name: *const c_char, oflag: c_int, mode: crate::mode_t) -> c_int;
++    pub fn shm_open(name: *const c_char, oflag: c_int, mode: mode_t) -> c_int;
+     pub fn shm_unlink(name: *const c_char) -> c_int;
+ 
+     pub fn seekdir(dirp: *mut crate::DIR, loc: c_long);
+diff --git a/src/vxworks/mod.rs b/src/vxworks/mod.rs
+index 3a44adc7e..e2051baa2 100644
+--- a/src/vxworks/mod.rs
++++ b/src/vxworks/mod.rs
+@@ -220,7 +220,7 @@ s! {
+     pub struct stat {
+         pub st_dev: crate::dev_t,
+         pub st_ino: crate::ino_t,
+-        pub st_mode: crate::mode_t,
++        pub st_mode: mode_t,
+         pub st_nlink: crate::nlink_t,
+         pub st_uid: crate::uid_t,
+         pub st_gid: crate::gid_t,
+@@ -1299,7 +1299,7 @@ extern "C" {
+     pub fn msync(addr: *mut c_void, len: size_t, flags: c_int) -> c_int;
+ 
+     pub fn truncate(path: *const c_char, length: off_t) -> c_int;
+-    pub fn shm_open(name: *const c_char, oflag: c_int, mode: crate::mode_t) -> c_int;
++    pub fn shm_open(name: *const c_char, oflag: c_int, mode: mode_t) -> c_int;
+     pub fn shm_unlink(name: *const c_char) -> c_int;
+ 
+     pub fn gettimeofday(tp: *mut crate::timeval, tz: *mut c_void) -> c_int;
+@@ -1810,13 +1810,13 @@ extern "C" {
+     pub fn rmdir(path: *const c_char) -> c_int;
+ 
+     // stat.h
+-    pub fn mkdir(dirName: *const c_char, mode: crate::mode_t) -> c_int;
++    pub fn mkdir(dirName: *const c_char, mode: mode_t) -> c_int;
+ 
+     // stat.h
+-    pub fn chmod(path: *const c_char, mode: crate::mode_t) -> c_int;
++    pub fn chmod(path: *const c_char, mode: mode_t) -> c_int;
+ 
+     // stat.h
+-    pub fn fchmod(attr1: c_int, attr2: crate::mode_t) -> c_int;
++    pub fn fchmod(attr1: c_int, attr2: mode_t) -> c_int;
+ 
+     // unistd.h
+     pub fn fsync(fd: c_int) -> c_int;
+diff --git a/src/wasi/mod.rs b/src/wasi/mod.rs
+index 035ff8958..61061918c 100644
+--- a/src/wasi/mod.rs
++++ b/src/wasi/mod.rs
+@@ -653,7 +653,7 @@ extern "C" {
+         newpath: *const c_char,
+         flags: c_int,
+     ) -> c_int;
+-    pub fn mkdirat(dirfd: c_int, pathname: *const c_char, mode: crate::mode_t) -> c_int;
++    pub fn mkdirat(dirfd: c_int, pathname: *const c_char, mode: mode_t) -> c_int;
+     pub fn readlinkat(
+         dirfd: c_int,
+         pathname: *const c_char,
+-- 
+2.43.0
+

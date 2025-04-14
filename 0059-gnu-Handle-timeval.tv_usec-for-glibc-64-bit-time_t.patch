@@ -1,0 +1,53 @@
+From 21e5e3d7650eae2f7787d5037acf792e0bc5d968 Mon Sep 17 00:00:00 2001
+From: Ola x Nilsson <olani@axis.com>
+Date: Fri, 17 Mar 2023 15:30:46 +0100
+Subject: [PATCH 59/80] gnu: Handle timeval.tv_usec for glibc 64-bit time_t
+
+For 64 bit time on 32 bit linux glibc timeval.tv_usec is actually
+__suseconds64_t (64 bits) while suseconds_t is still 32 bits.
+
+References:
+https://github.com/bminor/glibc/blob/e78caeb4ff812ae19d24d65f4d4d48508154277b/time/bits/types/struct_timeval.h
+
+(backport <https://github.com/rust-lang/libc/pull/4433>)
+(cherry picked from commit b63a6521b6edad304761a1f1e73f24aaf1e23c8f)
+---
+ src/unix/linux_like/linux/gnu/b32/mod.rs | 1 +
+ src/unix/mod.rs                          | 6 +++++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/src/unix/linux_like/linux/gnu/b32/mod.rs b/src/unix/linux_like/linux/gnu/b32/mod.rs
+index 614f128de..fc39d7672 100644
+--- a/src/unix/linux_like/linux/gnu/b32/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/mod.rs
+@@ -15,6 +15,7 @@ pub type __fsword_t = i32;
+ pub type fsblkcnt64_t = u64;
+ pub type fsfilcnt64_t = u64;
+ pub type __syscall_ulong_t = c_ulong;
++pub type __suseconds64_t = i64;
+ 
+ cfg_if! {
+     if #[cfg(target_arch = "riscv32")] {
+diff --git a/src/unix/mod.rs b/src/unix/mod.rs
+index b8742e006..78331310c 100644
+--- a/src/unix/mod.rs
++++ b/src/unix/mod.rs
+@@ -56,10 +56,14 @@ s! {
+         pub modtime: time_t,
+     }
+ 
+-    // FIXME(time): Needs updates at least for glibc _TIME_BITS=64
+     pub struct timeval {
+         pub tv_sec: time_t,
++        #[cfg(not(gnu_time_bits64))]
+         pub tv_usec: suseconds_t,
++        // For 64 bit time on 32 bit linux glibc, suseconds_t is still
++        // a 32 bit type.  Use __suseconds64_t instead
++        #[cfg(gnu_time_bits64)]
++        pub tv_usec: __suseconds64_t,
+     }
+ 
+     // linux x32 compatibility
+-- 
+2.43.0
+
