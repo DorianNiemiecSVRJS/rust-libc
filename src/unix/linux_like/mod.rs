@@ -2100,7 +2100,7 @@ cfg_if! {
 
 // The statx syscall, available on some libcs.
 cfg_if! {
-    if #[cfg(any(target_env = "gnu", target_os = "android"))] {
+    if #[cfg(any(target_env = "gnu", target_env = "musl", target_os = "android"))] {
         extern "C" {
             pub fn statx(
                 dirfd: c_int,
